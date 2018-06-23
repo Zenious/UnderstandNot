@@ -10,7 +10,7 @@ app = Sanic()
 app.config.REQUEST_MAX_SIZE = 1000000000 # 1GB
 app.static('/static', '.')
 
-dynamodb = boto3.resource('dynamodb', region_name='us-west-2', endpoint_url="http://localhost:8001")
+# dynamodb = boto3.resource('dynamodb', region_name='us-west-2', endpoint_url="http://localhost:8001")
 
 @app.route('/')
 async def test(request):
@@ -42,11 +42,11 @@ async def post_upload(request):
     if 'video' in file_type:
         # generate db record for index
         index =  uuid.uuid4().hex
-        table = dynamodb.Table('Videos')
-        table.put_item(Item={
-            'id': index,
-            'title': file_name
-            } )
+        # table = dynamodb.Table('Videos')
+        # table.put_item(Item={
+        #     'id': index,
+        #     'title': file_name
+        #     } )
 
         create_file(index, file_body)
         # TODO upload video to S3 Bucket
