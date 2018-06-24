@@ -1,32 +1,29 @@
 from sanic import Sanic
 from sanic import response
-from extractAudio import AudioExtract
-from readJSON import Transcribe
 import uuid 
 import boto3
 import urllib
+from redis import Redis
+from rq import Queue
+from rq_worker import aws_stuff
+from sanic_jinja2 import SanicJinja2
+from readJSON import Transcribe
+
 
 app = Sanic()
 app.config.REQUEST_MAX_SIZE = 1000000000 # 1GB
 app.static('/static', '.')
 
+jinja = SanicJinja2(app)
+redis_connection = Redis()
+q = Queue(connection=redis_connection)
 # dynamodb = boto3.resource('dynamodb', region_name='us-west-2', endpoint_url="http://localhost:8001")
 
+
 @app.route('/')
+@jinja.template('index.html')
 async def test(request):
-    return response.html('''<!doctype html>
-    <title>Upload new File</title>
-    <h1>Upload new File</h1>
-    <form action="upload" method=post enctype=multipart/form-data>
-      <input type=file name=file accept="video/*">
-      <input type=submit value=Upload>
-    </form>   
-    <h1>Upload new JSON</h1>
-    <form action="parse" method=post enctype=multipart/form-data>
-      <input type=file name=file>
-      <input type=submit value=Upload>
-    </form>
-        ''')
+    return 
 
 
 @app.route('/upload', methods=['POST'])
@@ -49,24 +46,7 @@ async def post_upload(request):
         #     } )
 
         create_file(index, file_body)
-        # TODO upload video to S3 Bucket
-        audio_file = AudioExtract.extractFLAC(index)
-        # TODO upload audio to S3 Bucket
-        bucket = 'orbitalphase1'
-        s3 = boto3.client('s3')
-        s3.upload_file(audio_file, bucket, audio_file)
-        # TODO send req to transcribe
-        transcribe = boto3.client('transcribe')
-
-        result = transcribe.start_transcription_job(
-            TranscriptionJobName=index,
-            LanguageCode='en-US',
-            MediaSampleRateHertz=44100,
-            MediaFormat='flac',
-            Media={
-                'MediaFileUri': 'https://s3-us-east-2.amazonaws.com/{}/{}'.format(bucket,audio_file)
-            }
-        )
+        q.enqueue(aws_stuff, index)
         return response.redirect('/job/{}'.format(index))
 
     else:
@@ -86,6 +66,7 @@ async def post_transcribe(request):
     return response.text("TODO")
 
 @app.route('/job/<id>')
+@jinja.template('job.html')
 async def retrieve_job(request, id):
     transcribe = boto3.client('transcribe')
     result = transcribe.get_transcription_job(
@@ -100,22 +81,18 @@ async def retrieve_job(request, id):
         trans = Transcribe()
         trans.parseOutput(trans_file)
 
-    return response.html('''<!DOCTYPE html>
-<html>
-<body>
-STATUS : {}
-<audio controls>
-  <source src="/static/{}" type="audio/flac">
-Your browser does not support the audio element.
-</audio>
+        return {
+        'status': status,
+        'srt': trans_file,
+        'flac': id
+        }
 
-<a href="/static/trans{}.srt">DOWNLOAD LINK</a>
-</body>
-</html>
-
-            '''.format(status,id, id))
-
-
+@app.route('/video/<id>')
+@jinja.template('video.html')
+async def video(request, id):
+    return {
+    'id': id
+    }
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+    app.run(host='0.0.0.0', port=8010, workers=10)
