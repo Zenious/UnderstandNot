@@ -2,11 +2,15 @@
 <html>
 <body>
 STATUS : {{status}}
+{% if flac %}
 <audio controls>
-  <source src="/static/{{flac}}" type="audio/flac">
+  <source src="/static/{{flac}}.flac" type="audio/flac">
 Your browser does not support the audio element.
 </audio>
 
 <a href="/static/{{srt}}.srt">DOWNLOAD LINK</a>
+
+<a href="/video/{{flac}}"> Video Link</a>
+{%endif %}
 </body>
 </html>

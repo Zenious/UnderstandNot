@@ -8,9 +8,9 @@
 
 <body>
   <video id="my-video" class="video-js" controls preload="auto" width="1080" height="720"
-  poster="MY_VIDEO_POSTER.jpg" data-setup="{}">
+  poster="/static/MY_VIDEO_POSTER.jpg" data-setup="{}">
     <source src="/static/{{id}}" type='video/mp4'>
-    <track kind='captions' src='/static/trans{{id}}.vtt' srclang='en' label='English' />
+    <track kind='captions' src='/static/{{vtt}}.vtt' srclang='en' label='English' />
     <!--<source src="MY_VIDEO.webm" type='video/webm'>-->
     <p class="vjs-no-js">
       To view this video please enable JavaScript, and consider upgrading to a web browser that
