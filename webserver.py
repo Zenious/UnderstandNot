@@ -8,7 +8,8 @@ from rq import Queue
 from rq_worker import aws_stuff
 from sanic_jinja2 import SanicJinja2
 from readJSON import Transcribe
-
+from hashlib import md5
+import json
 
 app = Sanic()
 app.config.REQUEST_MAX_SIZE = 1000000000 # 1GB
@@ -17,7 +18,7 @@ app.static('/static', '.')
 jinja = SanicJinja2(app)
 redis_connection = Redis()
 q = Queue(connection=redis_connection)
-# dynamodb = boto3.resource('dynamodb', region_name='us-west-2', endpoint_url="http://localhost:8001")
+dynamodb = boto3.resource('dynamodb')
 
 
 @app.route('/')
@@ -37,15 +38,19 @@ async def post_upload(request):
 
     # check if is valid filetype
     if 'video' in file_type:
-        # generate db record for index
         index =  uuid.uuid4().hex
-        # table = dynamodb.Table('Videos')
-        # table.put_item(Item={
-        #     'id': index,
-        #     'title': file_name
-        #     } )
-
         create_file(index, file_body)
+        hashcode = compute_md5(file_body)
+        table = dynamodb.Table('Videos')
+        table.put_item(Item={
+            'id': index,
+            'title': file_name,
+            'hash': hashcode,
+            'job_status': 'Queue for Audio Extraction',
+            'transcript': None,
+            'subs': None
+            } )
+
         q.enqueue(aws_stuff, index)
         return response.redirect('/job/{}'.format(index))
 
@@ -60,6 +65,11 @@ def create_file(filename, data):
     f.write(data)
     f.close()
 
+def compute_md5(data):
+    m = md5()
+    m.update(data)
+    return m.digest()
+
 @app.route('/parse', methods=['POST'])
 async def post_transcribe(request):
     Transcribe.parseOutput()
@@ -68,31 +78,73 @@ async def post_transcribe(request):
 @app.route('/job/<id>')
 @jinja.template('job.html')
 async def retrieve_job(request, id):
-    transcribe = boto3.client('transcribe')
-    result = transcribe.get_transcription_job(
-        TranscriptionJobName=id)
+    table = dynamodb.Table('Videos')
+    db_query = table.get_item(
+        Key={'id':id},
+        ConsistentRead=True
+        )
+    db_item = db_query['Item']
+    job_status = db_item['job_status']
 
-    status = result['TranscriptionJob']['TranscriptionJobStatus']
+    if job_status == 'Sent Audio For Transcription':
+        transcribe = boto3.client('transcribe')
+        result = transcribe.get_transcription_job(
+            TranscriptionJobName=id)
 
-    if status == 'COMPLETED':
-        trans_uri = result['TranscriptionJob']['Transcript']['TranscriptFileUri']
-        trans_file = 'trans{}'.format(id)
-        urllib.request.urlretrieve(trans_uri,trans_file)
-        trans = Transcribe()
-        trans.parseOutput(trans_file)
+        status = result['TranscriptionJob']['TranscriptionJobStatus']
 
-        return {
-        'status': status,
-        'srt': trans_file,
-        'flac': id
+        if status == 'COMPLETED':
+            trans_uri = result['TranscriptionJob']['Transcript']['TranscriptFileUri']
+            trans_file = 'trans{}'.format(id)
+            urllib.request.urlretrieve(trans_uri,trans_file)
+            trans = Transcribe()
+            trans.parseOutput(trans_file)
+            table = dynamodb.Table('Videos')
+            trans_data = {}
+            with open(trans_file, "r") as f:
+                trans_data = json.load(f)
+            table.update_item(
+                Key= {'id': id},
+                UpdateExpression = "SET job_status=:job_status, transcript=:transcript",
+                ExpressionAttributeValues={
+                    ':job_status': 'Transcription done',
+                    ':transcript': trans_data
+                    }
+                )
+            return {
+            'status': status,
+            'srt': trans_file,
+            'flac': id
+            }
+        else: 
+            return {
+            'status': status
+            }
+
+    elif job_status == 'Transcription done':
+
+        return  {
+        'status': job_status,
+        'flac': id,
+        'srt': 'trans{}'.format(id)
         }
+
+    else:
+        return {
+        'status': job_status,
+        }
+       
 
 @app.route('/video/<id>')
 @jinja.template('video.html')
 async def video(request, id):
+    t = Transcribe()
+    srt_filename = 'trans{}.srt'.format(id)
+    t.srt_to_vtt(srt_filename)
     return {
+    'vtt': srt_filename,
     'id': id
     }
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8010, workers=10)
+    app.run(host='0.0.0.0', port=8000, workers=10)

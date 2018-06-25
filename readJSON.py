@@ -1,5 +1,6 @@
 import json
 import sys
+import re
 
 class Transcribe:
 	
@@ -57,3 +58,15 @@ class Transcribe:
 				print (str_format, file=f)
 				print (y[2], file=f)
 				print('',file=f)
+
+	def srt_to_vtt(self, srt_file):
+		vtt_file = srt_file + '.vtt'
+		with open(vtt_file, 'w') as f:
+			print ('WEBVTT', file=f)
+			print('', file=f)
+			with open(srt_file, 'r') as srt:
+				lines = srt.readlines()
+				for line in lines:
+					line = re.sub(r'(\d{2}),(\d{3})',r'\1.\2', line)
+					f.write(line)
+			
