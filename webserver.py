@@ -10,6 +10,8 @@ from sanic_jinja2 import SanicJinja2
 from readJSON import Transcribe
 from hashlib import md5
 import json
+from boto3.dynamodb.conditions import Attr
+from functools import reduce
 
 app = Sanic()
 app.config.REQUEST_MAX_SIZE = 1000000000 # 1GB
@@ -23,7 +25,7 @@ dynamodb = boto3.resource('dynamodb')
 
 @app.route('/')
 @jinja.template('index.html')
-async def test(request):
+async def index(request):
     return 
 
 
@@ -41,6 +43,9 @@ async def post_upload(request):
         index =  uuid.uuid4().hex
         create_file(index, file_body)
         hashcode = compute_md5(file_body)
+
+        #TODO check duplicates
+
         table = dynamodb.Table('Videos')
         table.put_item(Item={
             'id': index,
@@ -75,9 +80,39 @@ async def post_transcribe(request):
     Transcribe.parseOutput()
     return response.text("TODO")
 
+@app.route('/search')
+async def search_redirect(request):
+    inputs = request.args
+    return response.redirect('/search/{}'.format(inputs['search'][0]))
+
+
+@app.route('/search/<title>')
+@jinja.template('search.html')
+async def search(request, title):
+    # get GET Parameters
+    table = dynamodb.Table('Videos')
+    db_query = table.scan(
+        FilterExpression=Attr('title').contains(title),
+        ConsistentRead=True
+        )
+    items = db_query['Items']
+    # titles = reduce((lambda x: x['title']) , items, [])
+    extract_title = lambda x:x['title']
+    extract_id = lambda x:x['id']
+    results = []
+    for item in items:
+        info = {}
+        info.update({'title': extract_title(item)})
+        info.update({'id' : extract_id(item)})
+        results.append(info)
+    return {'results': results}
+
+
 @app.route('/job/<id>')
 @jinja.template('job.html')
 async def retrieve_job(request, id):
+    jinja_response = {}
+
     table = dynamodb.Table('Videos')
     db_query = table.get_item(
         Key={'id':id},
@@ -85,14 +120,15 @@ async def retrieve_job(request, id):
         )
     db_item = db_query['Item']
     job_status = db_item['job_status']
-
+    title = {'title': db_item['title']}
+    jinja_response.update(title)
     if job_status == 'Sent Audio For Transcription':
         transcribe = boto3.client('transcribe')
         result = transcribe.get_transcription_job(
             TranscriptionJobName=id)
 
         status = result['TranscriptionJob']['TranscriptionJobStatus']
-
+        jinja_response.update({'status': status})
         if status == 'COMPLETED':
             trans_uri = result['TranscriptionJob']['Transcript']['TranscriptFileUri']
             trans_file = 'trans{}'.format(id)
@@ -111,28 +147,19 @@ async def retrieve_job(request, id):
                     ':transcript': trans_data
                     }
                 )
-            return {
-            'status': status,
-            'srt': trans_file,
-            'flac': id
-            }
+            jinja_response.update({'srt': trans_file, 'flac': id, 'ready': True})
+            return jinja_response
         else: 
-            return {
-            'status': status
-            }
-
+            return jinja_response
     elif job_status == 'Transcription done':
-
-        return  {
-        'status': job_status,
-        'flac': id,
-        'srt': 'trans{}'.format(id)
-        }
-
+        jinja_response.update({
+            'flac': id,
+            'srt': 'trans{}'.format(id),
+            'ready': True
+            })
+        return jinja_response
     else:
-        return {
-        'status': job_status,
-        }
+        return jinja_response
        
 
 @app.route('/video/<id>')

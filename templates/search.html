@@ -1,0 +1,9 @@
+Search Result
+<table>
+{% for result in results %}
+<tr>
+	<th>{{result.title}}</th>
+	<td><a href="/job/{{result.id}}">Link</a></td>
+</tr>
+{% endfor %}
+</table>
