@@ -54,7 +54,7 @@ async def post_upload(request):
             'job_status': 'Queue for Audio Extraction',
             'transcript': None,
             'subs': None,
-            'count': 0
+            'vote_count': 0
             } )
 
         q.enqueue(aws_stuff, index)
@@ -122,6 +122,9 @@ async def retrieve_job(request, id):
     db_item = db_query['Item']
     job_status = db_item['job_status']
     title = {'title': db_item['title']}
+    count = db_item.get('vote_count')
+    if count is None:
+        count = 0
     jinja_response.update(title)
     if job_status == 'Sent Audio For Transcription':
         transcribe = boto3.client('transcribe')
@@ -148,7 +151,7 @@ async def retrieve_job(request, id):
                     ':transcript': trans_data
                     }
                 )
-            jinja_response.update({'srt': trans_file, 'flac': id, 'ready': True})
+            jinja_response.update({'srt': trans_file, 'flac': id, 'ready': True, 'count': count})
             return jinja_response
         else: 
             return jinja_response
@@ -156,7 +159,8 @@ async def retrieve_job(request, id):
         jinja_response.update({
             'flac': id,
             'srt': 'trans{}'.format(id),
-            'ready': True
+            'ready': True,
+            'count': count
             })
         return jinja_response
     else:
@@ -179,28 +183,30 @@ async def vote(request):
     args = request.args
     query_id = args.get('id')
     query_vote = args.get('vote')
-
+    print(args)
     table = dynamodb.Table('Videos')
     db_query = table.get_item(
         Key={'id':query_id},
         ConsistentRead=True
     )
     item = db_query['Item']
-    count = item['count']
-    if count is None:
-        count = 0
+    count_vote = item.get('vote_count')
+    if count_vote is None:
+        count_vote = 0
     if query_vote == 'yes':
-        count += 1
+        count_vote += 1
     else:
-        count -= 1
+        count_vote -= 1
+    print (count_vote)
+
     table.update_item(
-        Key= {'id': id},
-        UpdateExpression = "SET vote=:count",
+        Key= {'id': query_id},
+        UpdateExpression = "SET vote_count=:count_vote",
         ExpressionAttributeValues={
-            ':count': count
+            ':count_vote': count_vote
             }
     )
-    return response.json({'status': 'ok', 'count': count})
+    return response.json({'status': 'ok', 'count': count_vote})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000, workers=10)
