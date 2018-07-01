@@ -53,7 +53,8 @@ async def post_upload(request):
             'hash': hashcode,
             'job_status': 'Queue for Audio Extraction',
             'transcript': None,
-            'subs': None
+            'subs': None,
+            'count': 0
             } )
 
         q.enqueue(aws_stuff, index)
@@ -172,6 +173,34 @@ async def video(request, id):
     'vtt': srt_filename,
     'id': id
     }
+
+@app.route('/vote')
+async def vote(request):
+    args = request.args
+    query_id = args.get('id')
+    query_vote = args.get('vote')
+
+    table = dynamodb.Table('Videos')
+    db_query = table.get_item(
+        Key={'id':query_id},
+        ConsistentRead=True
+    )
+    item = db_query['Item']
+    count = item['count']
+    if count is None:
+        count = 0
+    if query_vote == 'yes':
+        count += 1
+    else:
+        count -= 1
+    table.update_item(
+        Key= {'id': id},
+        UpdateExpression = "SET vote=:count",
+        ExpressionAttributeValues={
+            ':count': count
+            }
+    )
+    return response.json({'status': 'ok', 'count': count})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000, workers=10)
