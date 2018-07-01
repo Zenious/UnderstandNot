@@ -15,7 +15,8 @@ from functools import reduce
 
 app = Sanic()
 app.config.REQUEST_MAX_SIZE = 1000000000 # 1GB
-app.static('/static', '.')
+app.static('/r', './resources')
+app.static('/static', './static')
 
 jinja = SanicJinja2(app)
 redis_connection = Redis()
@@ -67,7 +68,7 @@ async def post_upload(request):
         return response.text(file_type)
 
 def create_file(filename, data):
-    f = open(filename, 'wb')
+    f = open('./resources/{}'.format(filename), 'wb')
     f.write(data)
     f.close()
 
@@ -135,7 +136,7 @@ async def retrieve_job(request, id):
         jinja_response.update({'status': status})
         if status == 'COMPLETED':
             trans_uri = result['TranscriptionJob']['Transcript']['TranscriptFileUri']
-            trans_file = 'trans{}'.format(id)
+            trans_file = './resources/trans{}'.format(id)
             urllib.request.urlretrieve(trans_uri,trans_file)
             trans = Transcribe()
             trans.parseOutput(trans_file)
@@ -171,7 +172,7 @@ async def retrieve_job(request, id):
 @jinja.template('video.html')
 async def video(request, id):
     t = Transcribe()
-    srt_filename = 'trans{}.srt'.format(id)
+    srt_filename = './resources/trans{}.srt'.format(id)
     t.srt_to_vtt(srt_filename)
     return {
     'vtt': srt_filename,
