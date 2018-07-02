@@ -3,61 +3,10 @@
 <body>
 
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
-<script src="https://code.jquery.com/jquery-3.3.1.min.js" ></script>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
 
-<script>
-	function submitYes(){
-		$.ajax({
-				type: 'GET',				
-				
-				url: "/vote",
-				data: {
-					id : "{{flac}}",
-					vote: 'yes'
-
-				},
-				dataType: 'json',                  
-                success: function(data){  
-					console.log(data);  
-					$('#vote_count').html(data.count);
-                },  
-                error: function(xhr, status, e){  
-                    console.log(xhr);  
-                    console.log(status);  
-                    console.log(e);  
-                }
-            }); 
-	
-	};
-
-
-	function submitNo(){
-		$.ajax({
-				type: 'GET',				
-				
-				url: "/vote",
-				data: {
-					id : "{{flac}}",
-					vote: 'no'
-
-				},
-				dataType: 'json',                  
-                success: function(data){  
-					console.log(data);  
-					$('#vote_count').html(data.count);
-                },  
-                error: function(xhr, status, e){  
-                    console.log(xhr);  
-                    console.log(status);  
-                    console.log(e);  
-                }
-            }); 
-	
-	};
-	
-</script>
 <table class="table table-bordered">
 	<tr>
 		<th>Video Title </th> 
@@ -76,25 +25,18 @@
 		<th>Audio</th>
 		<th> 
 			<audio controls>
-			  <source src="/static/{{flac}}.flac" type="audio/flac">
+			  <source src="/r/{{flac}}.flac" type="audio/flac">
 				Your browser does not support the audio element.
 			</audio>
 		</th>
 	</tr>
 	<tr> 
 		<th> Download subtitle file</th>
-		<td> <a href="/static/{{srt}}.srt" download> .srt </a> </td>
+		<td> <a href="/r/{{srt}}.srt" download> .srt </a> </td>
 	</tr>
 	<tr>
 		<th> View the Video</th>
 		<td> <a href="/video/{{flac}}"> Link</a></td>
-	</tr>
-	<tr>
-		<th> Rating </th>
-		<td > <span id="vote_count">{{count}} </span>
-			<a href="javascript:void(0);" onclick="submitYes()"> Good? </a>
-			<a href="javascript:void(0);" onclick="submitNo()"> Bad? </a> 
-		</td>
 	</tr>
 	{%endif%}
 </table>
