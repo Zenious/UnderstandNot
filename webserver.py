@@ -213,7 +213,7 @@ async def vote(request):
 
 @app.route('/milestone2')
 async def milestone(request):
-    return response.redirect('https://drive.google.com/file/d/1i96bcGSljLV4p5UMr8zpGzRBcxp-m6Wo/view?usp=sharing')
+    return response.redirect('https://drive.google.com/open?id=1bVEeyqf3NGO7y332PS1Mbob6_EXEUA4o')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000, workers=10)
