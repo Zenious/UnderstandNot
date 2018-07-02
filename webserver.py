@@ -137,6 +137,7 @@ async def retrieve_job(request, id):
         if status == 'COMPLETED':
             trans_uri = result['TranscriptionJob']['Transcript']['TranscriptFileUri']
             trans_file = './resources/trans{}'.format(id)
+            path_file = 'trans{}'.format(id)
             urllib.request.urlretrieve(trans_uri,trans_file)
             trans = Transcribe()
             trans.parseOutput(trans_file)
@@ -152,7 +153,7 @@ async def retrieve_job(request, id):
                     ':transcript': trans_data
                     }
                 )
-            jinja_response.update({'srt': trans_file, 'flac': id, 'ready': True, 'count': count})
+            jinja_response.update({'srt': path_file, 'flac': id, 'ready': True, 'count': count})
             return jinja_response
         else: 
             return jinja_response
@@ -173,9 +174,10 @@ async def retrieve_job(request, id):
 async def video(request, id):
     t = Transcribe()
     srt_filename = './resources/trans{}.srt'.format(id)
+    path_file = 'trans{}.srt'.format(id)
     t.srt_to_vtt(srt_filename)
     return {
-    'vtt': srt_filename,
+    'vtt': path_file,
     'id': id
     }
 
