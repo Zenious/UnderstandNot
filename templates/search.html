@@ -1,5 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
 Search Result
-<table>
+<table class="table table-bordered">
 {% for result in results %}
 <tr>
 	<th>{{result.title}}</th>
@@ -7,3 +10,5 @@ Search Result
 </tr>
 {% endfor %}
 </table>
+</div>
+{% endblock %}

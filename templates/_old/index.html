@@ -1,0 +1,17 @@
+<!doctype html>
+    <title>Upload new File</title>
+    <h1>Upload new File</h1>
+    <form action="upload" method=post enctype=multipart/form-data>
+      <input type=file name=file accept="video/*">
+      <input type=submit value=Upload>
+    </form>   
+    <h1>Upload new JSON</h1>
+    <form action="parse" method=post enctype=multipart/form-data>
+      <input type=file name=file>
+      <input type=submit value=Upload>
+    </form>
+    <h1> Search </h1>
+    <form action="search" method="get">
+      <input type="text" name="search">
+      <input type=submit>
+    </form>
