@@ -1,15 +1,37 @@
 import boto3
 from extractAudio import AudioExtract
 from readJSON import Transcribe
+from ffprobe3 import FFProbe
 
 dynamodb = boto3.resource('dynamodb')
 
 def aws_stuff(index):
     table = dynamodb.Table('Videos')
+    metadata = FFProbe('./resources/{}'.format(index))
+    is_video = False
+    for stream in metadata.streams:
+        if stream.is_video():
+            is_video = True
+            video_length = int(stream.duration_seconds())
+            table.update_item(
+                Key= {'id': index},
+                UpdateExpression = "SET video_length = :video_length",
+                ExpressionAttributeValues={':video_length': video_length}
+                )
+            break
+
+    if not is_video:
+        table.update_item(
+            Key= {'id': index},
+            UpdateExpression = "SET job_status = :job_status",
+            ExpressionAttributeValues={':job_status': 'Invalid Video File'}
+            )
+        #TODO delete file
+        return
     table.update_item(
         Key= {'id': index},
         UpdateExpression = "SET job_status = :job_status",
-        ExpressionAttributeValues={':job_status': 'Extratcing Audio'}
+        ExpressionAttributeValues={':job_status': 'Extracting Audio'}
         )
     # TODO upload video to S3 Bucket
     audio_file = AudioExtract.extractFLAC(index)

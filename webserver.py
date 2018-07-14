@@ -123,10 +123,13 @@ async def retrieve_job(request, id):
     db_item = db_query['Item']
     job_status = db_item['job_status']
     title = {'title': db_item['title']}
+    duration = {'duration': db_item['video_length']}
     count = db_item.get('vote_count')
     if count is None:
         count = 0
+    jinja_response.update({'status': job_status})
     jinja_response.update(title)
+    jinja_response.update(duration)
     if job_status == 'Sent Audio For Transcription':
         transcribe = boto3.client('transcribe')
         result = transcribe.get_transcription_job(
@@ -135,6 +138,7 @@ async def retrieve_job(request, id):
         status = result['TranscriptionJob']['TranscriptionJobStatus']
         jinja_response.update({'status': status})
         if status == 'COMPLETED':
+            status = 'Transcription done'
             trans_uri = result['TranscriptionJob']['Transcript']['TranscriptFileUri']
             trans_file = './resources/trans{}'.format(id)
             path_file = 'trans{}'.format(id)
@@ -153,6 +157,7 @@ async def retrieve_job(request, id):
                     ':transcript': trans_data
                     }
                 )
+            jinja_response.update({'status': status})
             jinja_response.update({'srt': path_file, 'flac': id, 'ready': True, 'count': count})
             return jinja_response
         else: 
