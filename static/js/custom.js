@@ -39,14 +39,33 @@ function getNewStats() {
   })
 }
 
+function resizeFooter() {
+	$('main').css('margin-bottom', $('.footer').height());
+}
+
+
 $(document).ready( function() {
 	if ($('#timeDuration').length) {
 		formatTime();
 	};
 
-
 	if ($('#queue-length').length) {
 		getNewStats();
 		setTimeout(getNewStats,5000)
 	};
+
+	resizeFooter();
+	let didResize = false;
+
+	$(window).resize(function() {
+	  didResize = true;
+	});
+	
+	setInterval(function() {
+	  if(didResize) {
+	    didResize = false;
+	    resizeFooter();
+	  }
+	}, 250);
+
 })
