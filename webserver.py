@@ -225,7 +225,7 @@ async def milestone(request):
 @app.route('/job_queue')
 async def get_queue_length(request):
     queue_length = len(q)
-    job = get_current_job()
+    job = get_current_job(connection=redis_connection)
     return response.json({'status':'ok', 'queue_length':queue_length, 'current_job': job})
 
 if __name__ == '__main__':
