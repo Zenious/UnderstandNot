@@ -20,6 +20,33 @@ function formatTime() {
   $('#timeDuration').html(timeFormatted);
 };
 
+function getNewStats() {
+	$.get( "/job_queue", function(data) {
+  if (data.status == "ok") {
+  	$('#queue-length').text(data.queue_length);
+  	if (data.current_job == null) {
+  		$('#current-job').text('Currently Not serving any Job!');
+  	} else {
+  		$('#current-job').text('Currently serving Job '+data.current_job);
+  	}
+  	$('#update').text('Updated on ??');
+  } else {
+  	$('#update').text('Update Failed!!!');
+  }
+})
+  .fail(function() {
+	$('#update').text('Update Failed!!!');
+  })
+}
+
 $(document).ready( function() {
-	formatTime();
+	if ($('#timeDuration').length) {
+		formatTime();
+	};
+
+
+	if ($('#queue-length').length) {
+		getNewStats();
+		setTimeout(getNewStats,5000)
+	};
 })

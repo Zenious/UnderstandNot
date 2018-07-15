@@ -4,14 +4,14 @@ import uuid
 import boto3
 import urllib
 from redis import Redis
-from rq import Queue
+from rq import Queue, get_current_job
 from rq_worker import aws_stuff
 from sanic_jinja2 import SanicJinja2
 from readJSON import Transcribe
 from hashlib import md5
 import json
 from boto3.dynamodb.conditions import Attr
-from functools import reduce
+import time
 
 app = Sanic()
 app.config.REQUEST_MAX_SIZE = 1000000000 # 1GB
@@ -55,10 +55,11 @@ async def post_upload(request):
             'job_status': 'Queue for Audio Extraction',
             'transcript': None,
             'subs': None,
-            'vote_count': 0
+            'vote_count': 0,
+            'upload_date': int(time.time()) # time in seconds
             } )
 
-        q.enqueue(aws_stuff, index)
+        q.enqueue(aws_stuff, index, timeout='2h', job_id=index)
         return response.redirect('/job/{}'.format(index))
 
     else:
@@ -98,7 +99,6 @@ async def search(request, title):
         ConsistentRead=True
         )
     items = db_query['Items']
-    # titles = reduce((lambda x: x['title']) , items, [])
     extract_title = lambda x:x['title']
     extract_id = lambda x:x['id']
     results = []
@@ -123,14 +123,16 @@ async def retrieve_job(request, id):
     db_item = db_query['Item']
     job_status = db_item['job_status']
     title = {'title': db_item['title']}
-    duration = {'duration': db_item['video_length']}
+    timestamp = {'date': time.asctime(time.gmtime(db_item['upload_date']))}
     count = db_item.get('vote_count')
     if count is None:
         count = 0
     jinja_response.update({'status': job_status})
     jinja_response.update(title)
-    jinja_response.update(duration)
+    jinja_response.update(timestamp)
     if job_status == 'Sent Audio For Transcription':
+        duration = {'duration': db_item['video_length']}
+        jinja_response.update(duration)
         transcribe = boto3.client('transcribe')
         result = transcribe.get_transcription_job(
             TranscriptionJobName=id)
@@ -219,6 +221,12 @@ async def vote(request):
 @app.route('/milestone2')
 async def milestone(request):
     return response.redirect('https://drive.google.com/open?id=1bVEeyqf3NGO7y332PS1Mbob6_EXEUA4o')
+
+@app.route('/job_queue')
+async def get_queue_length(request):
+    queue_length = len(q)
+    job = get_current_job()
+    return response.json({'status':'ok', 'queue_length':queue_length, 'current_job': job})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000, workers=10)
