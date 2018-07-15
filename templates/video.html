@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container">
-  <video id="my-video" class="video-js" controls preload="auto" width="1080" height="720"
+  <video id="my-video" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto" width="1080" height="720"
   poster="/static/MY_VIDEO_POSTER.jpg" data-setup="{}">
     <source src="/r/{{id}}" type='video/mp4'>
     <track kind='captions' src='/r/{{vtt}}.vtt' srclang='en' label='English' />
