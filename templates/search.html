@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+Search Result
+<table class="table table-bordered">
+{% for result in results %}
+<tr>
+	<th>{{result.title}}</th>
+	<td><a href="/job/{{result.id}}">Link</a></td>
+</tr>
+{% endfor %}
+</table>
+</div>
+{% endblock %}

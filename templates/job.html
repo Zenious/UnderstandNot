@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+	<div class="container">
+<table class="table table-bordered">
+	<tr>
+		<th>Video Title </th> 
+		<td>{{title}}</td>
+	</tr>
+	<tr>
+		<th>Duration </th>
+		<td id="timeDuration">{{duration}}</td>
+	</tr>
+	<tr>
+		<th>Status </th> 
+		<td>{{status}}</td>
+	</tr>
+	<tr>
+		<th>Uploaded Date </th> 
+		<td>{{date}}</td>
+	</tr>
+	{% if ready %}
+	<tr>
+		<th>Audio</th>
+		<th> 
+			<audio controls>
+			  <source src="/r/{{flac}}.flac" type="audio/flac">
+				Your browser does not support the audio element.
+			</audio>
+		</th>
+	</tr>
+	<tr> 
+		<th> Download subtitle file</th>
+		<td> <a href="/r/{{srt}}.srt" download> .srt </a> </td>
+	</tr>
+	<tr>
+		<th> View the Video</th>
+		<td> <a href="/video/{{flac}}"> Link</a></td>
+	</tr>
+	{%endif%}
+</table>
+</div>
+</section>
+
+{% endblock %}
