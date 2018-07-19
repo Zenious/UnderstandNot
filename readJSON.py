@@ -1,6 +1,7 @@
 import json
 import sys
 import re
+import io
 
 class Transcribe:
 	
@@ -69,4 +70,51 @@ class Transcribe:
 				for line in lines:
 					line = re.sub(r'(\d{2}),(\d{3})',r'\1.\2', line)
 					f.write(line)
-			
+
+	def srt_to_vtt_mem(self, srt_file):
+		output = io.StringIO()
+		output.write('WEBVTT')
+		output.write('')
+		with open("resources/{}".format(srt_file), 'r') as srt:
+			lines = srt.readlines()
+			for line in lines:
+				line = re.sub(r'(\d{2}),(\d{3})',r'\1.\2', line)
+				output.write(line)	
+		text = output.getvalue()
+		output.close()
+		return text
+
+	def parse_to_edit(self, trans):
+		sentence = ''
+		building_block = []
+		current_time = 0.0
+		time_sector = 1
+		captions = []
+		timing_block = []
+		print(trans)
+		for block in trans['results']['items']:
+			if 'end_time' in block:
+				end_time = float(block['end_time'])
+				if end_time > time_sector * self.TIMING:
+					sentence = ' '.join(building_block)
+					building_block = []
+					output = {'start':current_time, 
+						'end': end_time, 
+						'text': sentence
+						}
+					captions.append(output)
+					current_time = block['end_time']
+					time_sector = end_time/1 + 1
+			word = block['alternatives'][0]['content']
+			if block['type'] == 'punctuation':
+				building_block[-1] = building_block[-1] + word
+			else: 
+				building_block.append(word)
+
+		sentence = ' '.join(building_block)
+		output = {'start':current_time, 
+			'end': end_time, 
+			'text': sentence
+			}
+		captions.append(output)
+		return captions

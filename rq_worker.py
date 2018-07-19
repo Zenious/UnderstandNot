@@ -33,9 +33,7 @@ def aws_stuff(index):
         UpdateExpression = "SET job_status = :job_status",
         ExpressionAttributeValues={':job_status': 'Extracting Audio'}
         )
-    # TODO upload video to S3 Bucket
     audio_file = AudioExtract.extractFLAC(index)
-    # TODO upload audio to S3 Bucket
     bucket = 'orbitalphase1'
     s3 = boto3.client('s3')
     s3.upload_file(audio_file, bucket, audio_file)

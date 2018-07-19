@@ -12,7 +12,8 @@ from hashlib import md5
 import json
 from boto3.dynamodb.conditions import Attr
 import time
-
+from sanic.exceptions import NotFound, ServerError, abort
+    
 app = Sanic()
 app.config.REQUEST_MAX_SIZE = 1000000000 # 1GB
 app.static('/r', './resources')
@@ -228,5 +229,40 @@ async def get_queue_length(request):
     job = get_current_job(connection=redis_connection)
     return response.json({'status':'ok', 'queue_length':queue_length, 'current_job': job})
 
+@app.route('/edit/<id>')
+@jinja.template('edit.html')
+async def sub_edit(request, id):
+    table = dynamodb.Table('Videos')
+    db_query = table.get_item(
+        Key={'id':id},
+        ConsistentRead=True
+        )
+    transcribe = Transcribe()
+    db_item = db_query['Item']
+    transcript = db_item['transcript']
+    subtitles = transcribe.parse_to_edit(transcript)
+    return {'subtitles': subtitles,
+    'id': id}
+
+@app.route('/<srt>.vtt')
+async def vtt(request, srt):
+    t = Transcribe(sfd)
+    return response.text(t.srt_to_vtt_mem(srt))
+
+
+@app.exception(NotFound)
+async def handle_404(request, exception):
+    variables = {
+        'error_url': request.path
+        }
+    return jinja.render('404.html',request, status=404, **variables)
+
+@app.exception(ServerError)
+async def handle_500(request, exception): 
+    variables = {
+        'exception': exception
+        }
+    return jinja.render('500.html',request, status=500, **variables)
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000, workers=10)
+    app.run(host='0.0.0.0', port=8000, workers=5)

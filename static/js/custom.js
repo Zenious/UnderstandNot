@@ -43,6 +43,11 @@ function resizeFooter() {
 	$('main').css('margin-bottom', $('.footer').height());
 }
 
+function seekToTime(time) {
+	var player = videojs('my-video_html5_api');
+	player.play();
+	player.currentTime(parseInt(time));
+}
 
 $(document).ready( function() {
 	if ($('#timeDuration').length) {
