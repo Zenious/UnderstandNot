@@ -13,7 +13,9 @@ import json
 from boto3.dynamodb.conditions import Attr
 import time
 from sanic.exceptions import NotFound, ServerError, abort
-    
+from sanic.log import logger as log
+import base64
+
 app = Sanic()
 app.config.REQUEST_MAX_SIZE = 1000000000 # 1GB
 app.static('/r', './resources')
@@ -39,16 +41,27 @@ async def post_upload(request):
     file_body = file[0].body
     file_name = file[0].name
     file_type = file[0].type
-
+    if "" in [file_body, file_name,file_type]:
+        return response.redirect('/')
     # check if is valid filetype
     if 'video' in file_type:
         index =  uuid.uuid4().hex
         create_file(index, file_body)
         hashcode = compute_md5(file_body)
-
+        log.info('hash generated = {}'.format(hashcode))
         #TODO check duplicates
-
         table = dynamodb.Table('Videos')
+
+        db_query = table.scan(
+            FilterExpression=Attr('hash').contains(hashcode),
+            Limit=1,
+            ConsistentRead=True
+            )
+        items = db_query['Items']
+        if len(items) > 0:
+            b64hash = base64.b64encode(hashcode)
+            return response.redirect('/hash/{}'.format(b64hash.decode("ascii")))
+
         table.put_item(Item={
             'id': index,
             'title': file_name,
@@ -89,6 +102,28 @@ async def search_redirect(request):
     inputs = request.args
     return response.redirect('/search/{}'.format(inputs['search'][0]))
 
+@app.route('/hash/<title>')
+@jinja.template('search.html')
+async def hash_search(request, title):
+    hashcode = base64.b64decode(title)
+    table = dynamodb.Table('Videos')
+    db_query = table.scan(
+        FilterExpression=Attr('hash').contains(hashcode),
+        ConsistentRead=True
+        )
+    items = db_query['Items']
+    extract_title = lambda x:x['title']
+    extract_id = lambda x:x['id']
+    extract_date = lambda x:x.get('upload_date')
+    results = []
+    log.info(len(items))
+    for item in items:
+        info = {}
+        info.update({'title': extract_title(item)})
+        info.update({'id' : extract_id(item)})
+        info.update({'upload_date' : extract_date(item)})
+        results.append(info)
+    return {'results': results}
 
 @app.route('/search/<title>')
 @jinja.template('search.html')
@@ -102,11 +137,13 @@ async def search(request, title):
     items = db_query['Items']
     extract_title = lambda x:x['title']
     extract_id = lambda x:x['id']
+    extract_date = lambda x:x.get('upload_date')
     results = []
     for item in items:
         info = {}
         info.update({'title': extract_title(item)})
         info.update({'id' : extract_id(item)})
+        info.update({'upload_date' : extract_date(item)})
         results.append(info)
     return {'results': results}
 
@@ -121,7 +158,9 @@ async def retrieve_job(request, id):
         Key={'id':id},
         ConsistentRead=True
         )
-    db_item = db_query['Item']
+    db_item = db_query.get('Item')
+    if db_item is None:
+        abort(404)
     job_status = db_item['job_status']
     title = {'title': db_item['title']}
     timestamp = {'date': time.asctime(time.gmtime(db_item['upload_date']))}
@@ -265,4 +304,4 @@ async def handle_500(request, exception):
     return jinja.render('500.html',request, status=500, **variables)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000, workers=5)
+    app.run(host='0.0.0.0', port=8000, workers=5, debug=True, access_log=True)
