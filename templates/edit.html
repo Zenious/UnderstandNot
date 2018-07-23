@@ -3,7 +3,7 @@
 <div class="container">
 	<h3> Subtitle Editor </h3>
 <div class="row">
-	<div class="table-responsive col-sm-5">
+	<div class="table-responsive col-sm-5" style="max-height: 450px">
 	<table class="table-bordered">
 		<tr>
 			<th>Seq</th>
@@ -12,7 +12,7 @@
 			<th>Text</th>
 		</tr>
 		{% for sub in subtitles %}
-		<tr onclick="seekToTime({{sub.start}});">
+		<tr onclick="seekToTime(this);">
 			<td>{{loop.index}}</td>
 			<td>{{sub.start}}</td>
 			<td>{{sub.end}}</td>
@@ -36,9 +36,27 @@
 	  <!-- If you'd like to support IE8 (for Video.js versions prior to v7) -->
 	  <script src="http://vjs.zencdn.net/ie8/ie8-version/videojs-ie8.min.js"></script>
 	  <script src="https://vjs.zencdn.net/7.0.3/video.js"></script>
+
 	</div>
 
 
+</div>
+<div>
+	<form>
+		<p>
+			Current time frame of to edit
+		</p>
+		<p>
+			Start Time: <input type="text" id="edit-start" value="">
+			End Time:<input type="text" id="edit-end" value="">
+		</p>
+		<p> 
+			Text in time frame: <textarea id="edit-text"></textarea>		
+			<input type="button" onclick="applyChange();" value="Make Change">
+
+		</p>
+	</form>
+</div>
 </div>
 </div>
 {% endblock %}
