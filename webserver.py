@@ -13,11 +13,15 @@ import json
 from boto3.dynamodb.conditions import Attr
 import time
 from sanic.exceptions import NotFound, ServerError, abort
-    
+from sanic.log import logger as log
+import base64
+from sanic_session import Session, InMemorySessionInterface
+
 app = Sanic()
 app.config.REQUEST_MAX_SIZE = 1000000000 # 1GB
 app.static('/r', './resources')
 app.static('/static', './static')
+session = Session(app, interface=InMemorySessionInterface())
 
 jinja = SanicJinja2(app)
 redis_connection = Redis()
@@ -34,21 +38,31 @@ async def index(request):
 @app.route('/upload', methods=['POST'])
 async def post_upload(request):
     if 'file' not in request.files:
-        return response.text('no files')
+        return response.redirect('/')
     file = request.files['file']
     file_body = file[0].body
     file_name = file[0].name
     file_type = file[0].type
-
+    if "" in [file_body, file_name,file_type]:
+        return response.redirect('/')
     # check if is valid filetype
     if 'video' in file_type:
         index =  uuid.uuid4().hex
         create_file(index, file_body)
         hashcode = compute_md5(file_body)
-
-        #TODO check duplicates
-
+        log.info('hash generated = {}'.format(hashcode))
         table = dynamodb.Table('Videos')
+
+        db_query = table.scan(
+            FilterExpression=Attr('hash').contains(hashcode),
+            Limit=1,
+            ConsistentRead=True
+            )
+        items = db_query['Items']
+        if len(items) > 0:
+            b64hash = base64.b64encode(hashcode)
+            return response.redirect('/hash/{}'.format(b64hash.decode("ascii")))
+
         table.put_item(Item={
             'id': index,
             'title': file_name,
@@ -57,6 +71,7 @@ async def post_upload(request):
             'transcript': None,
             'subs': None,
             'vote_count': 0,
+            'author': 'anonymous',
             'upload_date': int(time.time()) # time in seconds
             } )
 
@@ -89,6 +104,27 @@ async def search_redirect(request):
     inputs = request.args
     return response.redirect('/search/{}'.format(inputs['search'][0]))
 
+@app.route('/hash/<title>')
+@jinja.template('search.html')
+async def hash_search(request, title):
+    hashcode = base64.b64decode(title)
+    table = dynamodb.Table('Videos')
+    db_query = table.scan(
+        FilterExpression=Attr('hash').contains(hashcode),
+        ConsistentRead=True
+        )
+    items = db_query['Items']
+    extract_title = lambda x:x['title']
+    extract_id = lambda x:x['id']
+    extract_date = lambda x:x.get('upload_date')
+    results = []
+    for item in items:
+        info = {}
+        info.update({'title': extract_title(item)})
+        info.update({'id' : extract_id(item)})
+        info.update({'upload_date' : extract_date(item)})
+        results.append(info)
+    return {'results': results}
 
 @app.route('/search/<title>')
 @jinja.template('search.html')
@@ -102,11 +138,13 @@ async def search(request, title):
     items = db_query['Items']
     extract_title = lambda x:x['title']
     extract_id = lambda x:x['id']
+    extract_date = lambda x:x.get('upload_date')
     results = []
     for item in items:
         info = {}
         info.update({'title': extract_title(item)})
         info.update({'id' : extract_id(item)})
+        info.update({'upload_date' : extract_date(item)})
         results.append(info)
     return {'results': results}
 
@@ -121,7 +159,9 @@ async def retrieve_job(request, id):
         Key={'id':id},
         ConsistentRead=True
         )
-    db_item = db_query['Item']
+    db_item = db_query.get('Item')
+    if db_item is None:
+        abort(404)
     job_status = db_item['job_status']
     title = {'title': db_item['title']}
     timestamp = {'date': time.asctime(time.gmtime(db_item['upload_date']))}
@@ -191,6 +231,8 @@ async def video(request, id):
 
 @app.route('/vote')
 async def vote(request):
+    if request['session'].get('vote') is not None:
+        return response.json({'status': 'error', 'count': count_vote})
     args = request.args
     query_id = args.get('id')
     query_vote = args.get('vote')
@@ -208,7 +250,6 @@ async def vote(request):
         count_vote += 1
     else:
         count_vote -= 1
-    print (count_vote)
 
     table.update_item(
         Key= {'id': query_id},
@@ -217,6 +258,7 @@ async def vote(request):
             ':count_vote': count_vote
             }
     )
+    request['session']['vote'] = True
     return response.json({'status': 'ok', 'count': count_vote})
 
 @app.route('/milestone2')
@@ -241,12 +283,32 @@ async def sub_edit(request, id):
     db_item = db_query['Item']
     transcript = db_item['transcript']
     subtitles = transcribe.parse_to_edit(transcript)
-    return {'subtitles': subtitles,
+    return {'subtitles': subtitles,\
+    'vtt': 'trans{}.srt'.format(id),
     'id': id}
+
+@app.route('/edit/temp', methods=['POST'])
+async def interrim_vtt(request):
+    variables = request.form
+    srt = variables['id'][0]
+    t = Transcribe()
+    if request['session'].get('vtt') is None:
+        request['session']['vtt'] = t.srt_to_vtt_mem(srt)
+    curr_vtt = request['session']['vtt']
+    return response.json({
+        'status':'ok',
+        'uri': '/edit/vtt/{}.vtt'.format(srt)
+        })
+
+
+@app.route('/edit/vtt/<id>.vtt')
+async def temp_vtt(request, id):
+    curr_vtt = request['session']['vtt']
+    return response.text(curr_vtt)
 
 @app.route('/<srt>.vtt')
 async def vtt(request, srt):
-    t = Transcribe(sfd)
+    t = Transcribe()
     return response.text(t.srt_to_vtt_mem(srt))
 
 
@@ -264,5 +326,7 @@ async def handle_500(request, exception):
         }
     return jinja.render('500.html',request, status=500, **variables)
 
+
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000, workers=5)
+    app.run(host='0.0.0.0', port=8000, workers=5, debug=True, access_log=True)
