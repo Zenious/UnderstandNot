@@ -295,6 +295,8 @@ async def interrim_vtt(request):
     if request['session'].get('vtt') is None:
         request['session']['vtt'] = t.srt_to_vtt_mem(srt)
     curr_vtt = request['session']['vtt']
+    curr_vtt = t.make_change_vtt(curr_vtt, start, end, text)
+    request['session']['vtt'] = curr_vtt
     return response.json({
         'status':'ok',
         'uri': '/edit/vtt/{}.vtt'.format(srt)
