@@ -121,11 +121,11 @@ class Transcribe:
 
 	def make_change_vtt(self, vtt, index, start, end, text):
 		vtt_list = vtt.split('\n')
-		
 		#TODO check the format if correct
-		timing = "{} --> {}".format(start, end)
-		vtt_list[(index)*4] = timing
-		vtt_list[(index)*4+1] = text
-		new_vtt = vtt_list.join('\n')
+		timing = "{} --> {}".format(self.formatTiming(start), self.formatTiming(end))
+		timing = re.sub(r'(\d{2}),(\d{3})',r'\1.\2', timing)
+		vtt_list[(index)*4-1] = timing
+		vtt_list[(index)*4] = text
+		new_vtt = "\n".join(vtt_list)
 		return new_vtt
 		

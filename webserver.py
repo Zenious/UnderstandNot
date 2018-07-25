@@ -283,6 +283,8 @@ async def sub_edit(request, id):
     db_item = db_query['Item']
     transcript = db_item['transcript']
     subtitles = transcribe.parse_to_edit(transcript)
+    t = Transcribe()
+    request['session']['vtt'] = t.srt_to_vtt_mem("trans{}.srt".format(id))
     return {'subtitles': subtitles,\
     'vtt': 'trans{}.srt'.format(id),
     'id': id}
@@ -291,11 +293,15 @@ async def sub_edit(request, id):
 async def interrim_vtt(request):
     variables = request.form
     srt = variables['id'][0]
+    start = variables['start'][0]
+    end = variables['end'][0]
+    text = variables['text'][0]
+    index = int(variables['index'][0])
     t = Transcribe()
     if request['session'].get('vtt') is None:
-        request['session']['vtt'] = t.srt_to_vtt_mem(srt)
+        request['session']['vtt'] = t.srt_to_vtt_mem("trans{}.srt".format(srt))
     curr_vtt = request['session']['vtt']
-    curr_vtt = t.make_change_vtt(curr_vtt, start, end, text)
+    curr_vtt = t.make_change_vtt(curr_vtt, index, start, end, text)
     request['session']['vtt'] = curr_vtt
     return response.json({
         'status':'ok',
@@ -313,6 +319,22 @@ async def vtt(request, srt):
     t = Transcribe()
     return response.text(t.srt_to_vtt_mem(srt))
 
+@app.route('/edit/commit', methods=['POST'])
+async def commit_change(request):
+    variables = request.form
+    id = variables['id'][0]
+    index =  uuid.uuid4().hex
+    table = dynamodb.Table('Videos')
+    db_query = table.get_item(
+        Key={'id':id},
+        ConsistentRead=True
+        )
+    db_item = db_query.get('Item')
+    db_item['id'] = index
+    db_item['upload_date'] = int(time.time())
+    db_item['job_status'] = 'Edited from <a href="{}">{}</a>'.format(id, id)
+    table.put_item(Item=db_item)
+    return response.redirect('/job/{}'.format(index))
 
 @app.exception(NotFound)
 async def handle_404(request, exception):
