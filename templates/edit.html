@@ -30,9 +30,7 @@
 	      <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
 	    </p>
 	  </video>
-	  <link href="https://vjs.zencdn.net/7.0.3/video-js.css" rel="stylesheet">
-	  <script src="https://vjs.zencdn.net/7.0.3/video.js"></script>
-
+	  <
 	</div>
 
 
@@ -61,4 +59,12 @@
 </div>
 </div>
 </div>
+{% endblock %}
+
+{% block js %}
+	<script src="https://vjs.zencdn.net/7.0.3/video.js"></script>
+{% endblock %}
+
+{% block css %}
+	<link href="https://vjs.zencdn.net/7.0.3/video-js.css" rel="stylesheet">
 {% endblock %}

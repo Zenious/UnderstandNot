@@ -16,8 +16,12 @@ function convert(value) {
 function formatTime() {
   let time = $('#timeDuration').text();
   console.log(time);
-  let timeFormatted = convert(time);
-  $('#timeDuration').html(timeFormatted);
+  if (time == "") {
+  	$('#timeDuration').html("Not available")
+  } else {
+	  let timeFormatted = convert(time);
+	  $('#timeDuration').html(timeFormatted);
+	}
 };
 
 function formatDate(secs) {
@@ -35,7 +39,7 @@ function getNewStats() {
   	} else {
   		$('#current-job').text('Currently serving Job '+data.current_job);
   	}
-  	$('#update').text('Updated on ??');
+  	$('#update').text(`Updated ${timeago().format(new Date())}`);
   } else {
   	$('#update').text('Update Failed!!!');
   }

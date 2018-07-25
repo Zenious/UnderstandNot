@@ -117,12 +117,14 @@ async def hash_search(request, title):
     extract_title = lambda x:x['title']
     extract_id = lambda x:x['id']
     extract_date = lambda x:x.get('upload_date')
+    extract_author = lambda x:x.get('author')
     results = []
     for item in items:
         info = {}
         info.update({'title': extract_title(item)})
         info.update({'id' : extract_id(item)})
         info.update({'upload_date' : extract_date(item)})
+        info.update({'author' : extract_author(item)})
         results.append(info)
     return {'results': results}
 
@@ -139,12 +141,14 @@ async def search(request, title):
     extract_title = lambda x:x['title']
     extract_id = lambda x:x['id']
     extract_date = lambda x:x.get('upload_date')
+    extract_author = lambda x:x.get('author')
     results = []
     for item in items:
         info = {}
         info.update({'title': extract_title(item)})
         info.update({'id' : extract_id(item)})
         info.update({'upload_date' : extract_date(item)})
+        info.update({'author' : extract_author(item)})
         results.append(info)
     return {'results': results}
 
@@ -349,7 +353,6 @@ async def handle_500(request, exception):
         'exception': exception
         }
     return jinja.render('500.html',request, status=500, **variables)
-
 
 
 if __name__ == '__main__':
