@@ -42,7 +42,8 @@ function getNewStats() {
 })
   .fail(function() {
 	$('#update').text('Update Failed!!!');
-  })
+  });
+	resizeFooter();
 }
 
 function resizeFooter() {
@@ -96,6 +97,16 @@ function applyChange(row) {
 }
 
 $(document).ready( function() {
+	if ($('#file').length) {
+		$('#file').change(function() {
+			// Reject more than 100MB (cloudflare limit)
+			if ($(this).prop('files')[0].size > 100*1024*1024) {
+				alert('Upload file size limit is 100MB');
+				console.log("TOO MCUH");
+			}
+		}) 
+	}
+
 	if ($('#timeDuration').length) {
 		formatTime();
 	};
