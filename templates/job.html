@@ -47,3 +47,10 @@
 </section>
 
 {% endblock %}
+
+{% block js %}
+<script>
+	const timeoutPeriod = 30 * 1000;
+	setTimeout("location.reload(true);", timeoutPeriod);
+</script>
+{% endblock %}
