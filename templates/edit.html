@@ -24,38 +24,53 @@
 	<div class="container col-sm-7">
 	  <video id="my-video" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto" width="1080" height="720" data-setup='{"fluid": true}'>
 	    <source src="/r/{{id}}" type='video/mp4'>
-	    <track kind='captions' src='/r/{{vtt}}.vtt' srclang='en' label='English' default />
+	    <track kind='captions' src='/{{vtt}}.vtt' srclang='en' label='English' default />
 	    <p class="vjs-no-js">
 	      To view this video please enable JavaScript, and consider upgrading to a web browser that
 	      <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
 	    </p>
 	  </video>
-	  <
+	  	<form action="commit" method="post">
+	  		<div class="input-group input-group-md" style="margin-top: 15px">
+			  <div class="input-group-prepend">
+			    <span class="input-group-text" id="inputGroup-sizing-md">Author</span>
+			  </div>
+  			  <input type="hidden" name='id' value="{{id}}">
+			  <input type="text" class="form-control" required="">
+			  <button class="btn btn-success"> Commit Change</button>
+			</div>
+	</form>
 	</div>
 
 
 </div>
 <div>
 	<form>
-		<p>
-			Current time frame of to edit
-		</p>
-		<p>
+	  <div class="form-group">
+			<label class="col-form-label-lg">Current time frame of to edit </label>
 			<input type="hidden" name="id" value="{{id}}">
-			<input type="hidden" name="index" id="edit-index" value=""> 
-			Start Time: <input type="text" id="edit-start" name="start" value="">
-			End Time:<input type="text" id="edit-end" name="end" value="">
-		</p>
-		<p> 
-			Text in time frame: <textarea id="edit-text" name="text"></textarea>		
-			<input type="button" onclick="applyChange(this.form);" value="Make Change">
+			<input type="hidden" name="index" id="edit-index" value="">
+			<div class="form-row">
+				<div class="form-group col-md-2">
+					<label for="edit-start">Start Time: </label>
+					<input type="text" id="edit-start" class="form-control" name="start" value="">
+				</div>
+				<div class="form-group col-md-2">
+					<label for="edit-start" >End Time:</label>
+					<input type="text" id="edit-end" class="form-control" name="end" value="">
+				</div>
+			</div>
+		<div class="form-row" >
+			<div class="form-group col-md-4">
+			<label for="edit-text"> Text in time frame: </label>
+			<textarea class="form-control" id="edit-text" name="text"></textarea>		
+		</div>
 
-		</p>
+			<input type="button" class="btn btn-success" onclick="applyChange(this.form);" value="See Change">
+		</div>
+
 	</form>
-	<form action="commit" method="post">
-		<input type="hidden" name='id' value="{{id}}">
-		<button> Commit Change</button>
-	</form>
+
 </div>
 </div>
 </div>

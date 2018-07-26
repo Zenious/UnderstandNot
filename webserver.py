@@ -248,7 +248,7 @@ async def retrieve_job(request, id):
             s3 = boto3.client('s3')
             bucket='orbitalphase1'
             audio_file = './resources/{}.flac'.format(id)
-            s3.delete_object(bucket, audio_file)
+            s3.delete_object(Bucket=bucket, Key=audio_file)
 
             table.update_item(
                 Key= {'id': id},
@@ -283,12 +283,8 @@ async def retrieve_job(request, id):
 @app.route('/video/<id>')
 @jinja.template('video.html')
 async def video(request, id):
-    t = Transcribe()
-    srt_filename = './resources/trans{}.srt'.format(id)
-    path_file = 'trans{}.srt'.format(id)
-    t.srt_to_vtt(srt_filename)
     return {
-    'vtt': path_file,
+    'vtt': id,
     'id': id
     }
 
@@ -299,7 +295,6 @@ async def vote(request):
     args = request.args
     query_id = args.get('id')
     query_vote = args.get('vote')
-    print(args)
     table = dynamodb.Table('Videos')
     db_query = table.get_item(
         Key={'id':query_id},
@@ -348,8 +343,8 @@ async def sub_edit(request, id):
     subtitles = transcribe.parse_to_edit(transcript)
     t = Transcribe()
     request['session']['vtt'] = t.srt_to_vtt_mem("trans{}.srt".format(id))
-    return {'subtitles': subtitles,\
-    'vtt': 'trans{}.srt'.format(id),
+    return {'subtitles': subtitles,
+    'vtt': '{}'.format(id),
     'id': id}
 
 @app.route('/edit/temp', methods=['POST'])
@@ -362,7 +357,13 @@ async def interrim_vtt(request):
     index = int(variables['index'][0])
     t = Transcribe()
     if request['session'].get('vtt') is None:
-        request['session']['vtt'] = t.srt_to_vtt_mem("trans{}.srt".format(srt))
+        table = dynamodb.Table('Videos')
+        db_query = table.get_item(
+            Key={'id':srt},
+            ConsistentRead=True
+            )
+        item = db_query.get('Item')
+        request['session']['vtt'] = t.srt_mem_to_vtt_mem(item['subs'])
     curr_vtt = request['session']['vtt']
     curr_vtt = t.make_change_vtt(curr_vtt, index, start, end, text)
     request['session']['vtt'] = curr_vtt
@@ -375,12 +376,18 @@ async def interrim_vtt(request):
 @app.route('/edit/vtt/<id>.vtt')
 async def temp_vtt(request, id):
     curr_vtt = request['session']['vtt']
-    return response.raw(curr_vtt)
+    return response.text(curr_vtt)
 
 @app.route('/<srt>.vtt')
 async def vtt(request, srt):
     t = Transcribe()
-    return response.text(t.srt_to_vtt_mem(srt))
+    table = dynamodb.Table('Videos')
+    db_query = table.get_item(
+        Key={'id':srt},
+        ConsistentRead=True
+        )
+    item = db_query.get('Item')
+    return response.text(t.srt_mem_to_vtt_mem(item['subs']))
 
 @app.route('/<uid>.srt')
 async def srt(request, uid):
@@ -398,6 +405,7 @@ async def srt(request, uid):
 async def commit_change(request):
     variables = request.form
     id = variables['id'][0]
+    author = variables['author'][0]
     index =  uuid.uuid4().hex
     table = dynamodb.Table('Videos')
     db_query = table.get_item(
@@ -409,6 +417,7 @@ async def commit_change(request):
     for k,v in db_item.items():
         new_item[k] = v
     new_item['id'] = index
+    new_item['author'] = author
     new_item['upload_date'] = int(time.time())
     new_item['job_status'] = 'Edited from <a href="{}">{}</a>'.format(id, id)
     table.put_item(Item=new_item)

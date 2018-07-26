@@ -41,6 +41,13 @@
 		<th> View the Video</th>
 		<td> <a href="/video/{{flac}}"> Link</a></td>
 	</tr>
+	<tr>
+		<th> Rating </th>
+		<td> {{count}}
+			<a href="_blank" onclick="submitYes()"> Good? </a>
+			<a href="_blank" onclick="submitNo()"> Bad? </a> 
+		</td>
+	</tr>
 	{%endif%}
 </table>
 </div>
