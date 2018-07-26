@@ -10,6 +10,9 @@ Search Result
 			<th>Filename</th>
 			<th>Author</th>
 			<th>Uploaded Date</th>
+			{% if admin %}
+			<th>Delete</th>
+			{% endif %}
 		</tr>
 	</thead>
 	<tbody>
@@ -18,6 +21,12 @@ Search Result
 		<td><a href="/job/{{result.id}}">{{result.title}}</a></td>
 		<td>{{result.author}}</td>
 		<td class="upload-date">{{result.upload_date}}</td>
+		{% if admin %}
+		<td> <form action="/delete" method="post">
+			<input type='hidden' name="id" value="{{result.id}}">
+			<a href="#" onclick="$(this).parent().submit();"> <span> delete</span>
+		</a></form></td>
+		{% endif %}
 	</tr>
 {% endfor %}
 </tbody>

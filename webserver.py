@@ -8,7 +8,7 @@ from rq import Queue, get_current_job
 from rq_worker import aws_stuff
 from sanic_jinja2 import SanicJinja2
 from readJSON import Transcribe
-from hashlib import md5
+from hashlib import md5, pbkdf2_hmac
 import json
 from boto3.dynamodb.conditions import Attr
 import time
@@ -16,7 +16,10 @@ from sanic.exceptions import NotFound, ServerError, abort
 from sanic.log import logger as log
 import base64
 from sanic_session import Session, InMemorySessionInterface
+import configparser
 
+config = configparser.ConfigParser()
+config.read('config.ini')
 app = Sanic()
 app.config.REQUEST_MAX_SIZE = 1000000000 # 1GB
 app.static('/r', './resources')
@@ -339,6 +342,71 @@ async def commit_change(request):
     db_item['job_status'] = 'Edited from <a href="{}">{}</a>'.format(id, id)
     table.put_item(Item=db_item)
     return response.redirect('/job/{}'.format(index))
+
+@app.route('/UnderstandLiao', methods=['GET', 'POST'])
+async def admin_panel(request):
+    if request.method == 'GET':
+        if request['session'].get('admin') is not True:
+            return jinja.render('login.html', request=request)
+        else:
+            table = dynamodb.Table('Videos')
+            db_query = table.scan(
+                ConsistentRead=True
+                )
+            items = db_query['Items']
+            extract_title = lambda x:x['title']
+            extract_id = lambda x:x['id']
+            extract_date = lambda x:x.get('upload_date')
+            extract_author = lambda x:x.get('author')
+            results = []
+            for item in items:
+                info = {}
+                info.update({'title': extract_title(item)})
+                info.update({'id' : extract_id(item)})
+                info.update({'upload_date' : extract_date(item)})
+                info.update({'author' : extract_author(item)})
+                results.append(info)
+            variables = {
+                'admin' : True,
+                'results': results}
+            return jinja.render('search.html', request=request, **variables)
+    elif request.method == 'POST':
+        inputs = request.form
+        user = inputs['user'][0]
+        pw = inputs['password'][0]
+        bpw = pw.encode('utf-8')
+        hashedpw = pbkdf2_hmac('sha256', bpw, config['DB']['SALT'].encode('utf-8'), 100000)
+        table = dynamodb.Table('Admin')
+        db_query = table.get_item(Key={
+            'user':user,
+            },
+            ConsistentRead=True)
+        if db_query.get('Item') is None:
+            abort(403)
+        else:
+            if hashedpw == db_query.get('Item')['password']:
+                request['session']['admin'] = True
+                return response.redirect('/UnderstandLiao')
+            else:
+                abort(403)
+
+    else:
+        abort(403)
+
+@app.route('/delete', methods=['POST'])
+async def delete_job(request):
+    if request['session'].get('admin') is not True:
+        return response.redirect('/UnderstandLiao')
+    else:
+        inputs = request.form
+        id = inputs['id'][0]
+        table = dynamodb.Table('Videos')
+        table.delete_item(
+            Key={
+                'id': id
+            }
+        )
+        return response.redirect('/UnderstandLiao')
 
 @app.exception(NotFound)
 async def handle_404(request, exception):

@@ -34,11 +34,11 @@ function getNewStats() {
 	$.get( "/job_queue", function(data) {
   if (data.status == "ok") {
   	$('#queue-length').text(data.queue_length);
-  	if (data.current_job == null) {
-  		$('#current-job').text('Currently Not serving any Job!');
-  	} else {
-  		$('#current-job').text('Currently serving Job '+data.current_job);
-  	}
+  	// if (data.current_job == null) {
+  	// 	$('#current-job').text('Currently Not serving any Job!');
+  	// } else {
+  	// 	$('#current-job').text('Currently serving Job '+data.current_job);
+  	// }
   	$('#update').text(`Updated ${timeago().format(new Date())}`);
   } else {
   	$('#update').text('Update Failed!!!');
