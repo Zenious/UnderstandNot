@@ -38,7 +38,6 @@ def aws_stuff(index):
     s3 = boto3.client('s3')
     s3.upload_file(audio_file, bucket, audio_file)
 
-    # TODO send req to transcribe
     transcribe = boto3.client('transcribe')
 
     result = transcribe.start_transcription_job(
