@@ -21,25 +21,43 @@
 	</tr>
 	{% if ready %}
 	<tr>
-		<th>Audio</th>
+		<th>Edit Subtitles</th>
 		<th> 
-			<audio controls>
-			  <source src="/r/{{flac}}.flac" type="audio/flac">
-				Your browser does not support the audio element.
-			</audio>
+			<a href="/edit/{{flac}}">Edit the Sub!</a>
 		</th>
 	</tr>
 	<tr> 
 		<th> Download subtitle file</th>
-		<td> <a href="/r/{{srt}}.srt" download> .srt </a> </td>
+		<td> 
+			<a href="/r/{{srt}}.srt" download>
+				<span class="badge badge-secondary"> .srt </span>
+			</a> 
+			<a href="/{{srt}}.vtt" download> 
+				<span class="badge badge-secondary"> .vtt </span> 
+			</a>
+		</td>
 	</tr>
 	<tr>
 		<th> View the Video</th>
 		<td> <a href="/video/{{flac}}"> Link</a></td>
+	</tr>
+	<tr>
+		<th> Rating </th>
+		<td> {{count}}
+			<a href="_blank" onclick="submitYes()"> Good? </a>
+			<a href="_blank" onclick="submitNo()"> Bad? </a> 
+		</td>
 	</tr>
 	{%endif%}
 </table>
 </div>
 </section>
 
+{% endblock %}
+
+{% block js %}
+<script>
+	const timeoutPeriod = 30 * 1000;
+	setTimeout("location.reload(true);", timeoutPeriod);
+</script>
 {% endblock %}

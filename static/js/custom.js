@@ -16,8 +16,12 @@ function convert(value) {
 function formatTime() {
   let time = $('#timeDuration').text();
   console.log(time);
-  let timeFormatted = convert(time);
-  $('#timeDuration').html(timeFormatted);
+  if (time == "") {
+  	$('#timeDuration').html("Not available")
+  } else {
+	  let timeFormatted = convert(time);
+	  $('#timeDuration').html(timeFormatted);
+	}
 };
 
 function formatDate(secs) {
@@ -30,19 +34,20 @@ function getNewStats() {
 	$.get( "/job_queue", function(data) {
   if (data.status == "ok") {
   	$('#queue-length').text(data.queue_length);
-  	if (data.current_job == null) {
-  		$('#current-job').text('Currently Not serving any Job!');
-  	} else {
-  		$('#current-job').text('Currently serving Job '+data.current_job);
-  	}
-  	$('#update').text('Updated on ??');
+  	// if (data.current_job == null) {
+  	// 	$('#current-job').text('Currently Not serving any Job!');
+  	// } else {
+  	// 	$('#current-job').text('Currently serving Job '+data.current_job);
+  	// }
+  	$('#update').text(`Updated ${timeago().format(new Date())}`);
   } else {
   	$('#update').text('Update Failed!!!');
   }
 })
   .fail(function() {
 	$('#update').text('Update Failed!!!');
-  })
+  });
+	resizeFooter();
 }
 
 function resizeFooter() {
@@ -51,6 +56,7 @@ function resizeFooter() {
 
 function seekToTime(row) {
 	const time = row.children[1].innerText;
+	$('#edit-index').val(row.children[0].innerText);
 	$('#edit-start').val(row.children[1].innerText);
 	$('#edit-end').val(row.children[2].innerText);
 	$('#edit-text').val(row.children[3].innerText);
@@ -60,42 +66,64 @@ function seekToTime(row) {
 	player.currentTime(parseInt(time));
 	player.pause();
 }
-
+let test;
 function applyChange(row) {
 	let link = '';
-	$.post( "/edit/temp", { id: "transe40add59a4f6478cb1b83d661cc2714b.srt" },function( data ) {
+	let payload = { 
+		id: $(row [name='id']).val(),
+		start: $(row [name='start']).val(),
+		end: $(row [name='end']).val(),
+		text: $(row [name='text']).val(),
+		index: $(row [name='index']).val()
+	 };
+	let original = $(`#sub_${payload.index}`);
+	test = original;
+	originalData = original.children()
+	originalData[1].innerHTML = payload.start;
+	originalData[2].innerHTML = payload.end;
+	originalData[3].innerHTML = payload.text;
+	$.post("/edit/temp", payload,function( data ) {
 	  console.log( data );
 	  link = data.uri;
+
+		let player = videojs('my-video_html5_api');
+		let tracks = player.textTracks();
+			tracks.tracks_.forEach(function(track) {
+			if (track.label == 'edit') {
+				tracks.removeTrack(track);
+			}
+		});
+			console.log(link);
+		let opts = {
+			'src': link,
+			'label': 'edit',
+			'language': 'en'
+		};
+		let newTrack = player.addRemoteTextTrack(opts);
+		tracks = player.textTracks();
+		tracks.tracks_.forEach(function(track) {
+			if (track.label == 'edit') {
+				track.mode = 'showing';
+			} else {
+				track.mode = 'disabled';
+			}
+		});
+		player.play();
+		player.pause();
 	  
 	});
-	let player = videojs('my-video_html5_api');
-	let tracks = player.textTracks();
-		tracks.tracks_.forEach(function(track) {
-		if (track.label == 'edit') {
-			tracks.removeTrack(track);
-		}
-	});
-	let opts = {
-		'src': 'http://localhost:8000/r/transe40add59a4f6478cb1b83d661cc2714b.srt.vtt',
-		'label': 'edit',
-		'language': 'en'
-	};
-	let newTrack = player.addRemoteTextTrack(opts);
-	tracks = player.textTracks();
-	tracks.tracks_.forEach(function(track) {
-		if (track.label == 'edit') {
-			track.mode = 'showing';
-		} else {
-			track.mode = 'disabled';
-		}
-	});
-	player.play();
-	player.pause();
-		console.log('change is good');
-
 }
 
 $(document).ready( function() {
+	if ($('#file').length) {
+		$('#file').change(function() {
+			// Reject more than 100MB (cloudflare limit)
+			if ($(this).prop('files')[0].size > 100*1024*1024) {
+				alert('Upload file size limit is 100MB');
+			}
+		}) 
+	}
+
 	if ($('#timeDuration').length) {
 		formatTime();
 	};

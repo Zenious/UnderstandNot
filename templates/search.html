@@ -1,32 +1,49 @@
 {% extends "base.html" %}
 {% block content %}
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
-  
-<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
-<script>
-$(document).ready( function () {
-    $('#searchResult').DataTable();
-} );
-</script>
+
+
 <div class="container">
 Search Result
 <table id="searchResult" class="table table-bordered">
 	<thead>
 		<tr>
 			<th>Filename</th>
+			<th>Author</th>
 			<th>Uploaded Date</th>
-			<th></th>
+			{% if admin %}
+			<th>Delete</th>
+			{% endif %}
 		</tr>
 	</thead>
 	<tbody>
 {% for result in results %}
 	<tr>
-		<td>{{result.title}}</td>
+		<td><a href="/job/{{result.id}}">{{result.title}}</a></td>
+		<td>{{result.author}}</td>
 		<td class="upload-date">{{result.upload_date}}</td>
-		<td><a href="/job/{{result.id}}">Link</a></td>
+		{% if admin %}
+		<td> <form action="/delete" method="post">
+			<input type='hidden' name="id" value="{{result.id}}">
+			<a href="#" onclick="$(this).parent().submit();"> <span> delete</span>
+		</a></form></td>
+		{% endif %}
 	</tr>
 {% endfor %}
 </tbody>
 </table>
 </div>
+{% endblock %}
+
+{% block js %}
+	<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+
+	<script>
+		$(document).ready( function () {
+	    $('#searchResult').DataTable();
+	} );
+	</script>
+{% endblock %}
+
+{% block css %}
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
 {% endblock %}
