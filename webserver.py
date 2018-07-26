@@ -424,4 +424,8 @@ async def handle_500(request, exception):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000, workers=5, debug=True, access_log=True)
+    if config['GENERAL']['STATUS'] == 'dev':
+        app.run(host='0.0.0.0', port=8000, workers=5, debug=True, access_log=True)
+    else :
+        ssl = {'cert': config['SSL']['CERT'], 'key': config['SSL']['PRIVATE_KEY']}
+        app.run(host='0.0.0.0', port=8000, workers=5, debug=True, access_log=True, ssl=ssl)
