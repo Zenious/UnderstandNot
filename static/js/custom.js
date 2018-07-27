@@ -25,7 +25,7 @@ function formatTime() {
 };
 
 function formatDate(secs) {
-    var t = new Date(1970, 0, 1);
+    var t = new Date(Date.UTC(1970, 0, 1));
     t.setSeconds(secs);
     return t;
 }
