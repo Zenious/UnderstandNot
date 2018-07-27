@@ -84,6 +84,28 @@ class Transcribe:
 		output.close()
 		return text
 
+	def srt_mem_to_vtt_mem(self, srt_mem):
+		output = io.StringIO()
+		output.write('WEBVTT\n')
+		output.write('\n')
+		lines = srt_mem.split('\n')
+		for line in lines:
+			line = re.sub(r'(\d{2}),(\d{3})',r'\1.\2', line)
+			output.write(line+"\n")	
+		text = output.getvalue()
+		output.close()
+		return text
+
+	def srt_mem(self, srt_file):
+		output = io.StringIO()
+		with open("{}".format(srt_file), 'r') as srt:
+			lines = srt.readlines()
+			for line in lines:
+				output.write(line)	
+		text = output.getvalue()
+		output.close()
+		return text
+
 	def parse_to_edit(self, trans):
 		sentence = ''
 		building_block = []
