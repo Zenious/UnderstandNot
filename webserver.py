@@ -71,6 +71,26 @@ async def save_session(request, response):
 async def index(request):
     return 
 
+@app.route('/about')
+@jinja.template('about.html')
+async def about(request):
+    return
+
+@app.route('/contact')
+@jinja.template('contact.html')
+async def contact(request):
+    return
+
+@app.route('/tou')
+@jinja.template('tou.html')
+async def tou(request):
+    return
+
+@app.route('/privacy')
+@jinja.template('privacy.html')
+async def privacy(request):
+    return
+
 
 @app.route('/upload', methods=['POST'])
 async def post_upload(request):
@@ -205,16 +225,16 @@ async def retrieve_job(request, id):
         abort(404)
     job_status = db_item['job_status']
     title = {'title': db_item['title']}
-    timestamp = {'date': time.asctime(time.gmtime(db_item['upload_date']))}
+    duration = {'duration': db_item['video_length']}
+    timestamp = {'date': db_item['upload_date']}
     count = db_item.get('vote_count')
     if count is None:
         count = 0
     jinja_response.update({'status': job_status})
     jinja_response.update(title)
     jinja_response.update(timestamp)
+    jinja_response.update(duration)
     if job_status == 'Sent Audio For Transcription':
-        duration = {'duration': db_item['video_length']}
-        jinja_response.update(duration)
         transcribe = boto3.client('transcribe')
         result = transcribe.get_transcription_job(
             TranscriptionJobName=id)

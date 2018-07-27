@@ -42,14 +42,14 @@
   <body>
 
     <!-- Navigation -->
-    <nav class="navbar navbar-light bg-light">
+    <nav class="navbar navbar-light">
       <div class="container">
         <a class="navbar-brand" href="/"><img src="/static/img/icon.png" height="32" width="32">
  UnderstandNot</a>
         <div class="col-lg-3">
               <form action="/search" method="get" id="search-form">
             <div class="input-group">
-          <input type="text" class="form-control" placeholder="Search for subtitles..." name="search">
+          <input type="text" class="form-control" placeholder="Search for videos..." name="search">
           <span class="input-group-btn">
              <button class="btn btn-default" type="button" id="search-icon" onclick="goSearch();">
               <i class="icon-magnifier" aria-hidden="true"></i>
@@ -71,19 +71,19 @@
           <div class="col-lg-6 h-100 text-center text-lg-left my-auto">
             <ul class="list-inline mb-2">
               <li class="list-inline-item">
-                <a href="#">About</a>
+                <a href="/about">About</a>
               </li>
               <li class="list-inline-item">&sdot;</li>
               <li class="list-inline-item">
-                <a href="#">Contact</a>
+                <a href="/contact">Contact</a>
               </li>
               <li class="list-inline-item">&sdot;</li>
               <li class="list-inline-item">
-                <a href="#">Terms of Use</a>
+                <a href="/tou">Terms of Use</a>
               </li>
               <li class="list-inline-item">&sdot;</li>
               <li class="list-inline-item">
-                <a href="#">Privacy Policy</a>
+                <a href="/privacy">Privacy Policy</a>
               </li>
             </ul>
             <p class="text-muted small mb-4 mb-lg-0">&copy; UnderstandNot 2018. All Rights Reserved.</p>
