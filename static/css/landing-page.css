@@ -15,18 +15,19 @@ h6 {
 header.masthead {
   position: relative;
   background-color: #343a40;
-  background: url("/static/img/word-cloud-679937_1280.png") no-repeat center center;
+  background: url("/static/img/word-cloud-revised3.png") no-repeat center center;
   -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;
   background-size: cover;
   padding-top: 8rem;
   padding-bottom: 8rem;
+  
 }
 
 header.masthead .overlay {
   position: absolute;
-  background-color: #212529;
+  background-color: #000000;
   height: 100%;
   width: 100%;
   top: 0;
