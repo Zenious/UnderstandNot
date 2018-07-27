@@ -76,6 +76,22 @@ async def index(request):
 async def about(request):
     return
 
+@app.route('/contact')
+@jinja.template('contact.html')
+async def contact(request):
+    return
+
+@app.route('/tou')
+@jinja.template('tou.html')
+async def tou(request):
+    return
+
+@app.route('/privacy')
+@jinja.template('privacy.html')
+async def privacy(request):
+    return
+
+
 @app.route('/upload', methods=['POST'])
 async def post_upload(request):
     if 'file' not in request.files:
