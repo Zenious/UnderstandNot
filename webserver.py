@@ -205,7 +205,7 @@ async def retrieve_job(request, id):
         abort(404)
     job_status = db_item['job_status']
     title = {'title': db_item['title']}
-    timestamp = {'date': time.asctime(time.gmtime(db_item['upload_date']))}
+    timestamp = {'date': db_item['upload_date']}
     count = db_item.get('vote_count')
     if count is None:
         count = 0
