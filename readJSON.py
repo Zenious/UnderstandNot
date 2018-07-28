@@ -1,6 +1,10 @@
 import json
 import sys
 import re
+<<<<<<< HEAD
+=======
+import io
+>>>>>>> 766f1857d59687035d74131d5b8e8aef834abe55
 
 class Transcribe:
 	
@@ -69,4 +73,88 @@ class Transcribe:
 				for line in lines:
 					line = re.sub(r'(\d{2}),(\d{3})',r'\1.\2', line)
 					f.write(line)
+<<<<<<< HEAD
 			
+=======
+
+	def srt_to_vtt_mem(self, srt_file):
+		output = io.StringIO()
+		output.write('WEBVTT\n')
+		output.write('\n')
+		with open("resources/{}".format(srt_file), 'r') as srt:
+			lines = srt.readlines()
+			for line in lines:
+				line = re.sub(r'(\d{2}),(\d{3})',r'\1.\2', line)
+				output.write(line)	
+		text = output.getvalue()
+		output.close()
+		return text
+
+	def srt_mem_to_vtt_mem(self, srt_mem):
+		output = io.StringIO()
+		output.write('WEBVTT\n')
+		output.write('\n')
+		lines = srt_mem.split('\n')
+		for line in lines:
+			line = re.sub(r'(\d{2}),(\d{3})',r'\1.\2', line)
+			output.write(line+"\n")	
+		text = output.getvalue()
+		output.close()
+		return text
+
+	def srt_mem(self, srt_file):
+		output = io.StringIO()
+		with open("{}".format(srt_file), 'r') as srt:
+			lines = srt.readlines()
+			for line in lines:
+				output.write(line)	
+		text = output.getvalue()
+		output.close()
+		return text
+
+	def parse_to_edit(self, trans):
+		sentence = ''
+		building_block = []
+		current_time = 0.0
+		time_sector = 1
+		captions = []
+		timing_block = []
+		print(trans)
+		for block in trans['results']['items']:
+			if 'end_time' in block:
+				end_time = float(block['end_time'])
+				if end_time > time_sector * self.TIMING:
+					sentence = ' '.join(building_block)
+					building_block = []
+					output = {'start':current_time, 
+						'end': end_time, 
+						'text': sentence
+						}
+					captions.append(output)
+					current_time = block['end_time']
+					time_sector = end_time/1 + 1
+			word = block['alternatives'][0]['content']
+			if block['type'] == 'punctuation':
+				building_block[-1] = building_block[-1] + word
+			else: 
+				building_block.append(word)
+
+		sentence = ' '.join(building_block)
+		output = {'start':current_time, 
+			'end': end_time, 
+			'text': sentence
+			}
+		captions.append(output)
+		return captions
+
+	def make_change_vtt(self, vtt, index, start, end, text):
+		vtt_list = vtt.split('\n')
+		#TODO check the format if correct
+		timing = "{} --> {}".format(self.formatTiming(start), self.formatTiming(end))
+		timing = re.sub(r'(\d{2}),(\d{3})',r'\1.\2', timing)
+		vtt_list[(index)*4-1] = timing
+		vtt_list[(index)*4] = text
+		new_vtt = "\n".join(vtt_list)
+		return new_vtt
+		
+>>>>>>> 766f1857d59687035d74131d5b8e8aef834abe55

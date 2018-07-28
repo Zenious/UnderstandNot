@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="features-icons text-center">
+	<div class="container">
+		<div class="row">
+			<div class="col-sm">
+				<img src="/static/img/404.jpg" style="height: 100%;max-height: -webkit-fill-available;">
+			</div> 
+			<div class="col-sm">
+				<table style="height: 100%;">
+					<tbody>
+						<tr>
+							<td class="align-middle"><h2>Cannot Find File!</h2>
+								<p> Excuse me~ The file you request cannot be found >.<</p>
+								<p> Requested URL: {{error_url}}</td>
+						</tr>
+						<tr>
+							<td> Image from: <a href="https://anibum.net/excuse-me/">AcrylicStroke from Anibum</a>
+							</td>
+					</tbody>
+				</table>
+			</div>
+		</div>
+</section>
+{% endblock %}

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html>
 <body>
@@ -58,6 +59,12 @@
 	};
 	
 </script>
+=======
+{% extends "base.html" %}
+{% block content %}
+<section>
+	<div class="container">
+>>>>>>> 766f1857d59687035d74131d5b8e8aef834abe55
 <table class="table table-bordered">
 	<tr>
 		<th>Video Title </th> 
@@ -65,12 +72,17 @@
 	</tr>
 	<tr>
 		<th>Duration </th>
+<<<<<<< HEAD
 		<td>{{duration}}</td>
+=======
+		<td id="timeDuration">{{duration}}</td>
+>>>>>>> 766f1857d59687035d74131d5b8e8aef834abe55
 	</tr>
 	<tr>
 		<th>Status </th> 
 		<td>{{status}}</td>
 	</tr>
+<<<<<<< HEAD
 	{% if ready %}
 	<tr>
 		<th>Audio</th>
@@ -79,11 +91,33 @@
 			  <source src="/static/{{flac}}.flac" type="audio/flac">
 				Your browser does not support the audio element.
 			</audio>
+=======
+	<tr>
+		<th>Uploaded Date </th> 
+		<td class="upload-date">{{date}}</td>
+	</tr>
+	{% if ready %}
+	<tr>
+		<th>Edit Subtitles</th>
+		<th> 
+			<a href="/edit/{{flac}}">Edit the Sub!</a>
+>>>>>>> 766f1857d59687035d74131d5b8e8aef834abe55
 		</th>
 	</tr>
 	<tr> 
 		<th> Download subtitle file</th>
+<<<<<<< HEAD
 		<td> <a href="/static/{{srt}}.srt" download> .srt </a> </td>
+=======
+		<td> 
+			<a href="/r/{{srt}}.srt" download>
+				<span class="badge badge-secondary"> .srt </span>
+			</a> 
+			<a href="/{{srt}}.vtt" download> 
+				<span class="badge badge-secondary"> .vtt </span> 
+			</a>
+		</td>
+>>>>>>> 766f1857d59687035d74131d5b8e8aef834abe55
 	</tr>
 	<tr>
 		<th> View the Video</th>
@@ -91,12 +125,32 @@
 	</tr>
 	<tr>
 		<th> Rating </th>
+<<<<<<< HEAD
 		<td > <span id="vote_count">{{count}} </span>
 			<a href="javascript:void(0);" onclick="submitYes()"> Good? </a>
 			<a href="javascript:void(0);" onclick="submitNo()"> Bad? </a> 
+=======
+		<td> {{count}}
+			<a href="_blank" onclick="submitYes()"> Good? </a>
+			<a href="_blank" onclick="submitNo()"> Bad? </a> 
+>>>>>>> 766f1857d59687035d74131d5b8e8aef834abe55
 		</td>
 	</tr>
 	{%endif%}
 </table>
+<<<<<<< HEAD
 </body>
 </html>
+=======
+</div>
+</section>
+
+{% endblock %}
+
+{% block js %}
+<script>
+	const timeoutPeriod = 30 * 1000;
+	setTimeout("location.reload(true);", timeoutPeriod);
+</script>
+{% endblock %}
+>>>>>>> 766f1857d59687035d74131d5b8e8aef834abe55

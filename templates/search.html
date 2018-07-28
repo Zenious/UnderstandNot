@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Search Result
 <table>
 {% for result in results %}
@@ -7,3 +8,54 @@ Search Result
 </tr>
 {% endfor %}
 </table>
+=======
+{% extends "base.html" %}
+{% block content %}
+
+
+<div class="container">
+Search Result
+<table id="searchResult" class="table table-bordered">
+	<thead>
+		<tr>
+			<th>Filename</th>
+			<th>Author</th>
+			<th>Uploaded Date</th>
+			{% if admin %}
+			<th>Delete</th>
+			{% endif %}
+		</tr>
+	</thead>
+	<tbody>
+{% for result in results %}
+	<tr>
+		<td><a href="/job/{{result.id}}">{{result.title}}</a></td>
+		<td>{{result.author}}</td>
+		<td class="upload-date">{{result.upload_date}}</td>
+		{% if admin %}
+		<td> <form action="/delete" method="post">
+			<input type='hidden' name="id" value="{{result.id}}">
+			<a href="#" onclick="$(this).parent().submit();"> <span> delete</span>
+		</a></form></td>
+		{% endif %}
+	</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endblock %}
+
+{% block js %}
+	<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+
+	<script>
+		$(document).ready( function () {
+	    $('#searchResult').DataTable();
+	} );
+	</script>
+{% endblock %}
+
+{% block css %}
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+{% endblock %}
+>>>>>>> 766f1857d59687035d74131d5b8e8aef834abe55
