@@ -9,9 +9,6 @@ asyncio_redis == 0.14.3
 # webserver.py: 4,13
 boto3 == 1.7.45
 
-# webserver.py: 22
-elasticsearch == 6.3.0
-
 # extractAudio.py: 1
 ffmpeg_python == 0.1.11
 
