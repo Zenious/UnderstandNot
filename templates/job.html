@@ -8,6 +8,10 @@
 		<td>{{title}}</td>
 	</tr>
 	<tr>
+		<th>Author </th> 
+		<td>{{author}}</td>
+	</tr>
+	<tr>
 		<th>Duration </th>
 		<td id="timeDuration">{{duration}}</td>
 	</tr>
@@ -29,7 +33,7 @@
 	<tr> 
 		<th> Download subtitle file</th>
 		<td> 
-			<a href="/r/{{srt}}.srt" download>
+			<a href="/{{srt}}.srt" download>
 				<span class="badge badge-secondary"> .srt </span>
 			</a> 
 			<a href="/{{srt}}.vtt" download> 
@@ -43,9 +47,9 @@
 	</tr>
 	<tr>
 		<th> Rating </th>
-		<td> {{count}}
-			<a href="_blank" onclick="submitYes()"> Good? </a>
-			<a href="_blank" onclick="submitNo()"> Bad? </a> 
+		<td> <span id="vote_count">{{count}}</span> 
+			<a href="#" onclick="submitYes()"> Good? </a>
+			<a href="#" onclick="submitNo()"> Bad? </a> 
 		</td>
 	</tr>
 	{%endif%}
@@ -59,5 +63,53 @@
 <script>
 	const timeoutPeriod = 30 * 1000;
 	setTimeout("location.reload(true);", timeoutPeriod);
+</script>
+
+<script>
+	function submitYes(){
+		$.ajax({
+				type: 'GET',				
+				
+				url: "/vote",
+				data: {
+					id : "{{flac}}",
+					vote: 'yes'
+ 				},
+				dataType: 'json',                  
+                success: function(data){  
+					console.log(data);  
+					$('#vote_count').html(data.count);
+                },  
+                error: function(xhr, status, e){  
+                    console.log(xhr);  
+                    console.log(status);  
+                    console.log(e);  
+                }
+            }); 
+	
+	};
+ 	function submitNo(){
+		$.ajax({
+				type: 'GET',				
+				
+				url: "/vote",
+				data: {
+					id : "{{flac}}",
+					vote: 'no'
+ 				},
+				dataType: 'json',                  
+                success: function(data){  
+					console.log(data);  
+					$('#vote_count').html(data.count);
+                },  
+                error: function(xhr, status, e){  
+                    console.log(xhr);  
+                    console.log(status);  
+                    console.log(e);  
+                }
+            }); 
+	
+	};
+	
 </script>
 {% endblock %}

@@ -124,6 +124,7 @@ $(document).ready( function() {
 			// Reject more than 100MB (cloudflare limit)
 			if ($(this).prop('files')[0].size > 100*1024*1024) {
 				alert('Upload file size limit is 100MB');
+				this.value = "";
 			}
 		}) 
 	}

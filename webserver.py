@@ -137,6 +137,7 @@ async def post_upload(request):
             'job_status': 'Queue for Audio Extraction',
             'transcript': None,
             'subs': None,
+            'link': index,
             'vote_count': 0,
             'author': 'anonymous',
             'upload_date': int(time.time()) # time in seconds
@@ -236,12 +237,14 @@ async def retrieve_job(request, id):
     job_status = db_item['job_status']
     title = {'title': db_item['title']}
     timestamp = {'date': db_item['upload_date']}
+    author = {'author': db_item['author']}
     count = db_item.get('vote_count')
     if count is None:
         count = 0
     jinja_response.update({'status': job_status})
     jinja_response.update(title)
     jinja_response.update(timestamp)
+    jinja_response.update(author)
     try:
         duration = {'duration': db_item['video_length']}
         jinja_response.update(duration)
@@ -294,7 +297,7 @@ async def retrieve_job(request, id):
                     }
                 )
             jinja_response.update({'status': status})
-            jinja_response.update({'srt': path_file, 'flac': id, 'ready': True, 'count': count})
+            jinja_response.update({'srt': id, 'flac': id, 'ready': True, 'count': count})
             return jinja_response
         elif status == 'IN_PROGRESS':
             status= 'Sent to AWS to Transcribe'
@@ -305,7 +308,7 @@ async def retrieve_job(request, id):
     elif job_status == 'Transcription done' or "Edited" in job_status :
         jinja_response.update({
             'flac': id,
-            'srt': 'trans{}'.format(id),
+            'srt': id,
             'ready': True,
             'count': count
             })
@@ -317,15 +320,22 @@ async def retrieve_job(request, id):
 @app.route('/video/<id>')
 @jinja.template('video.html')
 async def video(request, id):
+    table = dynamodb.Table('Videos')
+    db_query = table.get_item(
+        Key={'id':id},
+        ConsistentRead=True
+    )
+    if db_query.get('Item') is None:
+        abort(404)
+    item = db_query['Item']
     return {
     'vtt': id,
-    'id': id
+    'id': id,
+    'video': item['link']
     }
 
 @app.route('/vote')
 async def vote(request):
-    if request['session'].get('vote') is not None:
-        return response.json({'status': 'error', 'count': count_vote})
     args = request.args
     query_id = args.get('id')
     query_vote = args.get('vote')
@@ -338,11 +348,19 @@ async def vote(request):
     count_vote = item.get('vote_count')
     if count_vote is None:
         count_vote = 0
+    voting_status = request['session'].get('vote')
+    if voting_status:
+        voted = request['session']['vote']
+        log.info(type(voted))
+        if query_id in voted:
+            return response.json({'status': 'error', 'count': count_vote})
+    else:
+        voted = []
     if query_vote == 'yes':
         count_vote += 1
     else:
         count_vote -= 1
-
+    voted.append(query_id)   
     table.update_item(
         Key= {'id': query_id},
         UpdateExpression = "SET vote_count=:count_vote",
@@ -350,7 +368,8 @@ async def vote(request):
             ':count_vote': count_vote
             }
     )
-    request['session']['vote'] = True
+
+    request['session']['vote'] = voted
     return response.json({'status': 'ok', 'count': count_vote})
 
 @app.route('/milestone2')
@@ -376,10 +395,11 @@ async def sub_edit(request, id):
     transcript = db_item['transcript']
     subtitles = transcribe.parse_to_edit(transcript)
     t = Transcribe()
-    request['session']['vtt'] = t.srt_to_vtt_mem("trans{}.srt".format(id))
+    request['session']['vtt'] = t.srt_mem_to_vtt_mem(db_item['subs'])
     return {'subtitles': subtitles,
     'vtt': '{}'.format(id),
-    'id': id}
+    'id': id,
+    'video': db_item['link']}
 
 @app.route('/edit/temp', methods=['POST'])
 async def interrim_vtt(request):
