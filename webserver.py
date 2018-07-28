@@ -225,7 +225,6 @@ async def retrieve_job(request, id):
         abort(404)
     job_status = db_item['job_status']
     title = {'title': db_item['title']}
-    duration = {'duration': db_item['video_length']}
     timestamp = {'date': db_item['upload_date']}
     count = db_item.get('vote_count')
     if count is None:
@@ -233,7 +232,12 @@ async def retrieve_job(request, id):
     jinja_response.update({'status': job_status})
     jinja_response.update(title)
     jinja_response.update(timestamp)
-    jinja_response.update(duration)
+    try:
+        duration = {'duration': db_item['video_length']}
+        jinja_response.update(duration)
+    except:
+        pass
+
     if job_status == 'Sent Audio For Transcription':
         transcribe = boto3.client('transcribe')
         result = transcribe.get_transcription_job(

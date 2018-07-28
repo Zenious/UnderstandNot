@@ -5,6 +5,13 @@ function goSearch() {
 	}
 }
 
+function getFile(event) {
+	event = event || window.event;
+	if(event.target.id != 'file_input') {
+		file_input.click();
+	}
+}
+
 function convert(value) {
     return Math.floor(value / 60) + ":" + (value % 60 ? value % 60 : '00')
 }
@@ -159,4 +166,7 @@ $(document).ready( function() {
 	  }
 	}, 250);
 
+	$
+
 })
+
