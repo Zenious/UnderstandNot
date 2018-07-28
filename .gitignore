@@ -1,3 +1,4 @@
 config.ini
 *.rds
 __pycache__/
+*.pyc
