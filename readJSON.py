@@ -1,10 +1,7 @@
 import json
 import sys
 import re
-<<<<<<< HEAD
-=======
 import io
->>>>>>> 766f1857d59687035d74131d5b8e8aef834abe55
 
 class Transcribe:
 	
@@ -73,9 +70,6 @@ class Transcribe:
 				for line in lines:
 					line = re.sub(r'(\d{2}),(\d{3})',r'\1.\2', line)
 					f.write(line)
-<<<<<<< HEAD
-			
-=======
 
 	def srt_to_vtt_mem(self, srt_file):
 		output = io.StringIO()
@@ -157,4 +151,3 @@ class Transcribe:
 		new_vtt = "\n".join(vtt_list)
 		return new_vtt
 		
->>>>>>> 766f1857d59687035d74131d5b8e8aef834abe55
