@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+	<h3> Subtitle Editor </h3>
+<div class="row">
+	<div class="table-responsive col-sm-5" style="max-height: 450px">
+	<table class="table-bordered">
+		<tr>
+			<th>Seq</th>
+			<th>Start Time</th>
+			<th>End Time</th>
+			<th>Text</th>
+		</tr>
+		{% for sub in subtitles %}
+		<tr id="sub_{{loop.index}}" onclick="seekToTime(this);">
+			<td>{{loop.index}}</td>
+			<td>{{sub.start}}</td>
+			<td>{{sub.end}}</td>
+			<td>{{sub.text}}</td>
+		</tr>
+		{% endfor %}
+	</table>
+	</div>
+	<div class="container col-sm-7">
+	  <video id="my-video" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto" width="1080" height="720" data-setup='{"fluid": true}'>
+	    <source src="/r/{{id}}" type='video/mp4'>
+	    <track kind='captions' src='/{{vtt}}.vtt' srclang='en' label='English' default />
+	    <p class="vjs-no-js">
+	      To view this video please enable JavaScript, and consider upgrading to a web browser that
+	      <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+	    </p>
+	  </video>
+	  	<form action="commit" method="post">
+	  		<div class="input-group input-group-md" style="margin-top: 15px">
+			  <div class="input-group-prepend">
+			    <span class="input-group-text" id="inputGroup-sizing-md">Author</span>
+			  </div>
+  			  <input type="hidden" name='id' value="{{id}}">
+			  <input type="text" class="form-control" name="author" required="">
+			  <button class="btn btn-success"> Commit Change</button>
+			</div>
+	</form>
+	</div>
+
+
+</div>
+<div>
+	<form>
+	  <div class="form-group">
+			<label class="col-form-label-lg">Current time frame of to edit </label>
+			<input type="hidden" name="id" value="{{id}}">
+			<input type="hidden" name="index" id="edit-index" value="">
+			<div class="form-row">
+				<div class="form-group col-md-2">
+					<label for="edit-start">Start Time: </label>
+					<input type="text" id="edit-start" class="form-control" name="start" value="">
+				</div>
+				<div class="form-group col-md-2">
+					<label for="edit-start" >End Time:</label>
+					<input type="text" id="edit-end" class="form-control" name="end" value="">
+				</div>
+			</div>
+		<div class="form-row" >
+			<div class="form-group col-md-4">
+			<label for="edit-text"> Text in time frame: </label>
+			<textarea class="form-control" id="edit-text" name="text"></textarea>		
+		</div>
+
+			<input type="button" class="btn btn-success" onclick="applyChange(this.form);" value="See Change">
+		</div>
+
+	</form>
+
+</div>
+</div>
+</div>
+{% endblock %}
+
+{% block js %}
+	<script src="https://vjs.zencdn.net/7.0.3/video.js"></script>
+{% endblock %}
+
+{% block css %}
+	<link href="https://vjs.zencdn.net/7.0.3/video-js.css" rel="stylesheet">
+{% endblock %}

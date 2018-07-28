@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+	<div class="row">
+    <div class="col-sm">
+		<img src="/static/img/404.jpg" style="height: 100%;max-height: -webkit-fill-available;">
+	</div> 
+    <div class="col-sm">
+		<table style="height: 100%;">
+		  <tbody>
+		    <tr>
+		      <td class="align-middle"><h2>{{exception}}</h2>
+		      	<p> You requested for this we cannot find it >.<</p>
+		      	<p> Error: {{details}}</td>
+		    </tr>
+		    <tr>
+		      <td> Image from: <a href="https://anibum.net/excuse-me/">AcrylicStroke from Anibum</a>
+			</td>
+		  </tbody>
+		</table>
+	</div>
+</div>
+{% endblock %}
