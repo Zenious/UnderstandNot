@@ -19,6 +19,8 @@ from sanic_session import RedisSessionInterface
 import configparser
 import os
 import asyncio_redis
+from elasticsearch import Elasticsearch
+import certifi
 
 class Redis_pool:
     """
@@ -51,6 +53,7 @@ redis = Redis_pool()
 # pass the getter method for the connection pool into the session
 session_interface = RedisSessionInterface(redis.get_redis_pool)
 
+es = Elasticsearch([config['ELASTICSEARCH']['HOST']], use_ssl=True, ca_certs=certifi.where())
 
 @app.middleware('request')
 async def add_session_to_request(request):
@@ -108,18 +111,25 @@ async def post_upload(request):
         create_file(index, file_body)
         hashcode = compute_md5(file_body)
         log.info('hash generated = {}'.format(hashcode))
+        
+        b64hash = base64.b64encode(hashcode).decode("ascii")
+        es_search = es.search(index='videos', body={
+            "query": {
+                "match": {
+                    "hash": b64hash
+                    }
+                }
+            })
+        if es_search['hits']['total'] > 0:
+            # check if truly have hash
+            es_record_found = es_search['hits']['hits']
+            for record in es_record_found:
+                if record['_source']['hash'] == b64hash:
+                    # found 1 is enough
+                    return response.redirect('/hash/{}'.format(b64hash))
+            # if cannot find, continue to create new job
+      
         table = dynamodb.Table('Videos')
-
-        db_query = table.scan(
-            FilterExpression=Attr('hash').contains(hashcode),
-            Limit=1,
-            ConsistentRead=True
-            )
-        items = db_query['Items']
-        if len(items) > 0:
-            b64hash = base64.b64encode(hashcode)
-            return response.redirect('/hash/{}'.format(b64hash.decode("ascii")))
-
         table.put_item(Item={
             'id': index,
             'title': file_name,
@@ -164,24 +174,24 @@ async def search_redirect(request):
 @app.route('/hash/<title>')
 @jinja.template('search.html')
 async def hash_search(request, title):
-    hashcode = base64.b64decode(title)
-    table = dynamodb.Table('Videos')
-    db_query = table.scan(
-        FilterExpression=Attr('hash').contains(hashcode),
-        ConsistentRead=True
-        )
-    items = db_query['Items']
-    extract_title = lambda x:x['title']
-    extract_id = lambda x:x['id']
-    extract_date = lambda x:x.get('upload_date')
-    extract_author = lambda x:x.get('author')
+    es_search = es.search(index='videos', body={
+            "query": {
+                "match": {
+                    "hash": title
+                    }
+                }
+            })
+    records = es_search['hits']['hits']
     results = []
-    for item in items:
+    for record in records:
         info = {}
-        info.update({'title': extract_title(item)})
-        info.update({'id' : extract_id(item)})
-        info.update({'upload_date' : extract_date(item)})
-        info.update({'author' : extract_author(item)})
+        info['id'] = record['_id'][3:] # remove prefix of 'id='
+        record_info = record['_source']
+        if record_info['hash'] != title:
+            pass
+        terms = ['upload_date', 'title', 'author']
+        for term in terms:
+            info[term] = record_info[term]
         results.append(info)
     return {'results': results}
 
@@ -189,23 +199,23 @@ async def hash_search(request, title):
 @jinja.template('search.html')
 async def search(request, title):
     # get GET Parameters
-    table = dynamodb.Table('Videos')
-    db_query = table.scan(
-        FilterExpression=Attr('title').contains(title),
-        ConsistentRead=True
-        )
-    items = db_query['Items']
-    extract_title = lambda x:x['title']
-    extract_id = lambda x:x['id']
-    extract_date = lambda x:x.get('upload_date')
-    extract_author = lambda x:x.get('author')
+    
+    es_search = es.search(index='videos', body={
+            "query": {
+                "match": {
+                    "title": title
+                    }
+                }
+            })
+    records = es_search['hits']['hits']
     results = []
-    for item in items:
+    for record in records:
         info = {}
-        info.update({'title': extract_title(item)})
-        info.update({'id' : extract_id(item)})
-        info.update({'upload_date' : extract_date(item)})
-        info.update({'author' : extract_author(item)})
+        info['id'] = record['_id'][3:] # remove prefix of 'id='
+        record_info = record['_source']
+        terms = ['upload_date', 'title', 'author']
+        for term in terms:
+            info[term] = record_info[term]
         results.append(info)
     return {'results': results}
 
@@ -453,22 +463,23 @@ async def admin_panel(request):
         if request['session'].get('admin') is not True:
             return jinja.render('login.html', request=request)
         else:
-            table = dynamodb.Table('Videos')
-            db_query = table.scan(
-                ConsistentRead=True
+            es_search = es.search(
+                index="videos",
+                body={
+                    "query": {
+                        'match_all' : {}
+                        }
+                    }
                 )
-            items = db_query['Items']
-            extract_title = lambda x:x['title']
-            extract_id = lambda x:x['id']
-            extract_date = lambda x:x.get('upload_date')
-            extract_author = lambda x:x.get('author')
+            records = es_search['hits']['hits']
             results = []
-            for item in items:
+            for record in records:
                 info = {}
-                info.update({'title': extract_title(item)})
-                info.update({'id' : extract_id(item)})
-                info.update({'upload_date' : extract_date(item)})
-                info.update({'author' : extract_author(item)})
+                info['id'] = record['_id'][3:] # remove prefix of 'id='
+                record_info = record['_source']
+                terms = ['upload_date', 'title', 'author']
+                for term in terms:
+                    info[term] = record_info[term]
                 results.append(info)
             variables = {
                 'admin' : True,
