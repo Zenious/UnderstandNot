@@ -20,6 +20,7 @@ import configparser
 import os
 import asyncio_redis
 from elasticsearch import Elasticsearch
+import certifi
 
 class Redis_pool:
     """
@@ -52,7 +53,7 @@ redis = Redis_pool()
 # pass the getter method for the connection pool into the session
 session_interface = RedisSessionInterface(redis.get_redis_pool)
 
-es = Elasticsearch([config['ELASTICSEARCH']['HOST']])
+es = Elasticsearch([config['ELASTICSEARCH']['HOST']], use_ssl=True, ca_certs=certifi.where())
 
 @app.middleware('request')
 async def add_session_to_request(request):
