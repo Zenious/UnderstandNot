@@ -5,8 +5,12 @@ function goSearch() {
 	}
 }
 
+function getFile(event) {
+	$("#file").click();
+}
+
 function convert(value) {
-    return Math.floor(value / 60) + ":" + (value % 60 ? value % 60 : '00')
+	return Math.floor(value / 60) + ":" + (value % 60 ? value % 60 : '00')
 }
 
 function convert(value) {
@@ -14,39 +18,39 @@ function convert(value) {
 }
 
 function formatTime() {
-  let time = $('#timeDuration').text();
-  console.log(time);
-  if (time == "") {
-  	$('#timeDuration').html("Not available")
-  } else {
-	  let timeFormatted = convert(time);
-	  $('#timeDuration').html(timeFormatted);
+	let time = $('#timeDuration').text();
+	console.log(time);
+	if (time == "") {
+		$('#timeDuration').html("Not available")
+	} else {
+		let timeFormatted = convert(time);
+		$('#timeDuration').html(timeFormatted);
 	}
 };
 
 function formatDate(secs) {
-    var t = new Date(Date.UTC(1970, 0, 1));
-    t.setSeconds(secs);
-    return t;
+	var t = new Date(Date.UTC(1970, 0, 1));
+	t.setSeconds(secs);
+	return t;
 }
 
 function getNewStats() {
 	$.get( "/job_queue", function(data) {
-  if (data.status == "ok") {
-  	$('#queue-length').text(data.queue_length);
-  	// if (data.current_job == null) {
-  	// 	$('#current-job').text('Currently Not serving any Job!');
-  	// } else {
-  	// 	$('#current-job').text('Currently serving Job '+data.current_job);
-  	// }
-  	$('#update').text(`Updated ${timeago().format(new Date())}`);
-  } else {
-  	$('#update').text('Update Failed!!!');
-  }
-})
-  .fail(function() {
-	$('#update').text('Update Failed!!!');
-  });
+		if (data.status == "ok") {
+			$('#queue-length').text(data.queue_length);
+			// if (data.current_job == null) {
+			// 	$('#current-job').text('Currently Not serving any Job!');
+			// } else {
+			// 	$('#current-job').text('Currently serving Job '+data.current_job);
+			// }
+			$('#update').text(`Updated ${timeago().format(new Date())}`);
+		} else {
+			$('#update').text('Update Failed!!!');
+		}
+	})
+	.fail(function() {
+		$('#update').text('Update Failed!!!');
+	});
 	resizeFooter();
 }
 
@@ -75,25 +79,25 @@ function applyChange(row) {
 		end: $(row [name='end']).val(),
 		text: $(row [name='text']).val(),
 		index: $(row [name='index']).val()
-	 };
+	};
 	let original = $(`#sub_${payload.index}`);
 	test = original;
 	originalData = original.children()
-	originalData[1].innerHTML = payload.start;
+		originalData[1].innerHTML = payload.start;
 	originalData[2].innerHTML = payload.end;
 	originalData[3].innerHTML = payload.text;
 	$.post("/edit/temp", payload,function( data ) {
-	  console.log( data );
-	  link = data.uri;
+		console.log( data );
+		link = data.uri;
 
 		let player = videojs('my-video_html5_api');
 		let tracks = player.textTracks();
-			tracks.tracks_.forEach(function(track) {
+		tracks.tracks_.forEach(function(track) {
 			if (track.label == 'edit') {
 				tracks.removeTrack(track);
 			}
 		});
-			console.log(link);
+		console.log(link);
 		let opts = {
 			'src': link,
 			'label': 'edit',
@@ -110,7 +114,7 @@ function applyChange(row) {
 		});
 		player.play();
 		player.pause();
-	  
+
 	});
 }
 
@@ -149,14 +153,14 @@ $(document).ready( function() {
 	let didResize = false;
 
 	$(window).resize(function() {
-	  didResize = true;
+		didResize = true;
 	});
-	
+
 	setInterval(function() {
-	  if(didResize) {
-	    didResize = false;
-	    resizeFooter();
-	  }
+		if(didResize) {
+			didResize = false;
+			resizeFooter();
+		}
 	}, 250);
 
 })

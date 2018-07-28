@@ -24,43 +24,63 @@
       </div>
     </header>
 
-    <!-- Icons Grid -->
-    <section class="features-icons text-center">
-      <div class="container">
-        <div class="row">
-          <div class="col-lg-4">
-            <div class="features-icons-item mx-auto mb-5 mb-lg-0 mb-lg-3">
-              <div class="features-icons-icon d-flex">
-                <i class="icon-film m-auto text-primary"></i>
-              </div>
-              <h3>Universal</h3>
-              <p class="lead mb-0">Supports all major video types available.</p>
-            </div>
-          </div>
-          <div class="col-lg-4">
-            <div class="features-icons-item mx-auto mb-5 mb-lg-0 mb-lg-3">
-              <div class="features-icons-icon d-flex">
-               <!--  <i class="icon-layers m-auto text-primary"></i> -->
-               <img class="logo m-auto text-primary" src="/static/img/icon_blue.png">
-              </div>
-              <h3>UnderstandNot</h3>
-              <p class="lead mb-0">Build in Summer 18...</p>
-            </div>
-          </div>
-          <div class="col-lg-4">
-            <div class="features-icons-item mx-auto mb-0 mb-lg-3">
-              <div class="features-icons-icon d-flex">
-                <i class="icon-check m-auto text-primary"></i>
-              </div>
-              <h3>Stats for Nerds</h3>
-              <p class="lead mb-0"><span id="queue-length">0</span> Job waiting in Queue... <br/>
-                <!-- <span id="current-job"> Currently Serving Job </span><br/> -->
-                <span id="update"> Last Updated on when your grandpa was still alive... </span></p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+			<!-- Custom 
+			<div class="col-xl-9 mx-auto">
+				<form action="/search" method="get">
+					<div class="form-row">
+						<div class="col-12 col-md-9 mb-2 mb-md-0">
+							<input type="text" class="form-control form-control-lg" placeholder="Search for videos or upload your video file..." name="search" style="border-radius: 3px;">
+							<input type="submit" hidden>
+						</div>
+				</form>
+
+				<form action="upload" method=post enctype=multipart/form-data>
+					<button class="btn btn-block btn-lg btn-primary" type="button" onclick="getFile(event);" style="width:54px;">
+						<i class="icon-cloud-upload" aria-hidden="true"></i>
+					</button>
+					<input id="file" type="file" name="file" accept="video/*" style="display: none;" onchange="form.submit();">
+				</form>
+					</div>
+			</div>
+			-->
+
+<!-- Icons Grid -->
+<section class="features-icons text-center">
+	<div class="container">
+		<div class="row">
+			<div class="col-lg-4">
+				<div class="features-icons-item mx-auto mb-5 mb-lg-0 mb-lg-3">
+					<div class="features-icons-icon d-flex">
+						<i class="icon-film m-auto text-primary"></i>
+					</div>
+					<h3>Universal</h3>
+					<p class="lead mb-0">Supports all major video types available.</p>
+				</div>
+			</div>
+			<div class="col-lg-4">
+				<div class="features-icons-item mx-auto mb-5 mb-lg-0 mb-lg-3">
+					<div class="features-icons-icon d-flex">
+						<!--  <i class="icon-layers m-auto text-primary"></i> -->
+						<img class="logo m-auto text-primary" src="/static/img/icon_blue.png">
+					</div>
+					<h3>UnderstandNot</h3>
+					<p class="lead mb-0">Build in Summer 18...</p>
+				</div>
+			</div>
+			<div class="col-lg-4">
+				<div class="features-icons-item mx-auto mb-0 mb-lg-3">
+					<div class="features-icons-icon d-flex">
+						<i class="icon-check m-auto text-primary"></i>
+					</div>
+					<h3>Stats for Nerds</h3>
+					<p class="lead mb-0"><span id="queue-length">0</span> Job waiting in Queue... <br/>
+					<!-- <span id="current-job"> Currently Serving Job </span><br/> -->
+					<span id="update"> Last Updated on when your grandpa was still alive... </span></p>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
 {% endblock %}
  
 {% block js %}
