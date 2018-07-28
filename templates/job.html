@@ -1,7 +1,70 @@
+<<<<<<< HEAD
+<!DOCTYPE html>
+<html>
+<body>
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" ></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+
+<script>
+	function submitYes(){
+		$.ajax({
+				type: 'GET',				
+				
+				url: "/vote",
+				data: {
+					id : "{{flac}}",
+					vote: 'yes'
+
+				},
+				dataType: 'json',                  
+                success: function(data){  
+					console.log(data);  
+					$('#vote_count').html(data.count);
+                },  
+                error: function(xhr, status, e){  
+                    console.log(xhr);  
+                    console.log(status);  
+                    console.log(e);  
+                }
+            }); 
+	
+	};
+
+
+	function submitNo(){
+		$.ajax({
+				type: 'GET',				
+				
+				url: "/vote",
+				data: {
+					id : "{{flac}}",
+					vote: 'no'
+
+				},
+				dataType: 'json',                  
+                success: function(data){  
+					console.log(data);  
+					$('#vote_count').html(data.count);
+                },  
+                error: function(xhr, status, e){  
+                    console.log(xhr);  
+                    console.log(status);  
+                    console.log(e);  
+                }
+            }); 
+	
+	};
+	
+</script>
+=======
 {% extends "base.html" %}
 {% block content %}
 <section>
 	<div class="container">
+>>>>>>> 766f1857d59687035d74131d5b8e8aef834abe55
 <table class="table table-bordered">
 	<tr>
 		<th>Video Title </th> 
@@ -9,12 +72,26 @@
 	</tr>
 	<tr>
 		<th>Duration </th>
+<<<<<<< HEAD
+		<td>{{duration}}</td>
+=======
 		<td id="timeDuration">{{duration}}</td>
+>>>>>>> 766f1857d59687035d74131d5b8e8aef834abe55
 	</tr>
 	<tr>
 		<th>Status </th> 
 		<td>{{status}}</td>
 	</tr>
+<<<<<<< HEAD
+	{% if ready %}
+	<tr>
+		<th>Audio</th>
+		<th> 
+			<audio controls>
+			  <source src="/static/{{flac}}.flac" type="audio/flac">
+				Your browser does not support the audio element.
+			</audio>
+=======
 	<tr>
 		<th>Uploaded Date </th> 
 		<td class="upload-date">{{date}}</td>
@@ -24,10 +101,14 @@
 		<th>Edit Subtitles</th>
 		<th> 
 			<a href="/edit/{{flac}}">Edit the Sub!</a>
+>>>>>>> 766f1857d59687035d74131d5b8e8aef834abe55
 		</th>
 	</tr>
 	<tr> 
 		<th> Download subtitle file</th>
+<<<<<<< HEAD
+		<td> <a href="/static/{{srt}}.srt" download> .srt </a> </td>
+=======
 		<td> 
 			<a href="/r/{{srt}}.srt" download>
 				<span class="badge badge-secondary"> .srt </span>
@@ -36,6 +117,7 @@
 				<span class="badge badge-secondary"> .vtt </span> 
 			</a>
 		</td>
+>>>>>>> 766f1857d59687035d74131d5b8e8aef834abe55
 	</tr>
 	<tr>
 		<th> View the Video</th>
@@ -43,13 +125,23 @@
 	</tr>
 	<tr>
 		<th> Rating </th>
+<<<<<<< HEAD
+		<td > <span id="vote_count">{{count}} </span>
+			<a href="javascript:void(0);" onclick="submitYes()"> Good? </a>
+			<a href="javascript:void(0);" onclick="submitNo()"> Bad? </a> 
+=======
 		<td> {{count}}
 			<a href="_blank" onclick="submitYes()"> Good? </a>
 			<a href="_blank" onclick="submitNo()"> Bad? </a> 
+>>>>>>> 766f1857d59687035d74131d5b8e8aef834abe55
 		</td>
 	</tr>
 	{%endif%}
 </table>
+<<<<<<< HEAD
+</body>
+</html>
+=======
 </div>
 </section>
 
@@ -61,3 +153,4 @@
 	setTimeout("location.reload(true);", timeoutPeriod);
 </script>
 {% endblock %}
+>>>>>>> 766f1857d59687035d74131d5b8e8aef834abe55
