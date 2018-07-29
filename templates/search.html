@@ -3,7 +3,7 @@
 
 
 <div class="container">
-Search Result
+	<h3>Search Result(s) for {{search_query}}</h3>
 <table id="searchResult" class="table table-bordered">
 	<thead>
 		<tr>
@@ -39,7 +39,12 @@ Search Result
 
 	<script>
 		$(document).ready( function () {
-	    $('#searchResult').DataTable();
+			$('#searchResult').DataTable({
+				"oLanguage": {
+					"sSearch": "Filter Result(s):"
+				}
+			});
+
 	} );
 	</script>
 {% endblock %}

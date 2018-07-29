@@ -200,7 +200,8 @@ async def hash_search(request, title):
 @jinja.template('search.html')
 async def search(request, title):
     # get GET Parameters
-    
+    jinja_response = {}
+    jinja_response.update({'search_query': title});
     es_search = es.search(index='videos', body={
             "query": {
                 "match": {
@@ -218,7 +219,9 @@ async def search(request, title):
         for term in terms:
             info[term] = record_info[term]
         results.append(info)
-    return {'results': results}
+
+    jinja_response.update({'results': results})
+    return jinja_response
 
 
 @app.route('/job/<id>')

@@ -46,20 +46,20 @@
 			<div class="container">
 				<a class="navbar-brand" href="/"><img src="/static/img/icon.png" height="32" width="32">
 					UnderstandNot</a>
-				<div class="col-lg-3">
-					<form action="/search" method="get" id="search-form">
-						<div class="input-group">
-							<input type="text" class="form-control" placeholder="Search for videos..." name="search" style="border-radius: 3px;">
-							
-							<span class="input-group-btn">
-								<button class="btn btn-default" type="button" id="search-icon" onclick="goSearch();">
-									<i class="icon-magnifier" aria-hidden="true"></i>
-								</button>
-								<input type="submit" hidden>
-							</span>
-						</div>
-					</form>
-				</div>
+					<div class="col-lg-3" id="nav-search-form">
+						<form action="/search" method="get" id="search-form">
+							<div class="input-group">
+								<input type="text" class="form-control" placeholder="Search for videos..." name="search" style="border-radius: 3px;">
+
+								<span class="input-group-btn">
+									<button class="btn btn-default" type="button" id="search-icon" onclick="goSearch();">
+										<i class="icon-magnifier" aria-hidden="true"></i>
+									</button>
+									<input type="submit" hidden>
+								</span>
+							</div>
+						</form>
+					</div>
 			</div>
 		</nav>
 		<main>
