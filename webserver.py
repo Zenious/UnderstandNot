@@ -324,6 +324,7 @@ async def retrieve_job(request, id):
 @jinja.template('video.html')
 async def video(request, id):
     table = dynamodb.Table('Videos')
+    jinja_response = {}
     db_query = table.get_item(
         Key={'id':id},
         ConsistentRead=True
@@ -331,11 +332,12 @@ async def video(request, id):
     if db_query.get('Item') is None:
         abort(404)
     item = db_query['Item']
-    return {
-    'vtt': id,
-    'id': id,
-    'video': item['link']
-    }
+    try:
+        jinja_response.update({'vtt': id})
+        jinja_response.update({'id': id})
+        jinja_response.update({'video': item['link']})
+    except:
+        abort(404)
 
 @app.route('/vote')
 async def vote(request):
@@ -388,6 +390,7 @@ async def get_queue_length(request):
 @app.route('/edit/<id>')
 @jinja.template('edit.html')
 async def sub_edit(request, id):
+    jinja_response = {}
     table = dynamodb.Table('Videos')
     db_query = table.get_item(
         Key={'id':id},
@@ -399,10 +402,18 @@ async def sub_edit(request, id):
     subtitles = transcribe.parse_to_edit(transcript)
     t = Transcribe()
     request['session']['vtt'] = t.srt_mem_to_vtt_mem(db_item['subs'])
-    return {'subtitles': subtitles,
-    'vtt': '{}'.format(id),
-    'id': id,
-    'video': db_item['link']}
+
+    try:
+        jinja_response.update({'subtitles': subtitles})
+        jinja_response.update({'vtt': '{}'.format(id)})
+        jinja_response.update({'id': id})
+        jinja_response.update({'video': db_item['link']})
+
+        print('test')
+
+        return jinja_response
+    except:
+        abort(404)
 
 @app.route('/edit/temp', methods=['POST'])
 async def interrim_vtt(request):
@@ -477,6 +488,7 @@ async def commit_change(request):
     new_item['author'] = author
     new_item['upload_date'] = int(time.time())
     new_item['job_status'] = 'Edited from <a href="{}">{}</a>'.format(id, id)
+    new_item['vote_count'] = 0
     table.put_item(Item=new_item)
     return response.redirect('/job/{}'.format(index))
 
