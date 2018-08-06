@@ -99,6 +99,7 @@ async def privacy(request):
 async def post_upload(request):
     if 'file' not in request.files:
         return response.redirect('/')
+
     file = request.files['file']
     file_body = file[0].body
     file_name = file[0].name
@@ -398,18 +399,16 @@ async def sub_edit(request, id):
         )
     transcribe = Transcribe()
     db_item = db_query['Item']
-    transcript = db_item['transcript']
-    subtitles = transcribe.parse_to_edit(transcript)
-    t = Transcribe()
-    request['session']['vtt'] = t.srt_mem_to_vtt_mem(db_item['subs'])
+    subtitle = transcribe.srt_to_edit(db_item['subs'])
+    test = transcribe.parse_to_edit(db_item['transcript'])
+    print(test[210])
+    request['session']['vtt'] = transcribe.srt_mem_to_vtt_mem(db_item['subs'])
 
     try:
-        jinja_response.update({'subtitles': subtitles})
+        jinja_response.update({'subtitles': subtitle})
         jinja_response.update({'vtt': '{}'.format(id)})
         jinja_response.update({'id': id})
         jinja_response.update({'video': db_item['link']})
-
-        print('test')
 
         return jinja_response
     except:
@@ -455,6 +454,8 @@ async def vtt(request, srt):
         ConsistentRead=True
         )
     item = db_query.get('Item')
+    if item is None:
+        abort(404)
     return response.text(t.srt_mem_to_vtt_mem(item['subs']))
 
 @app.route('/<uid>.srt')
@@ -471,10 +472,16 @@ async def srt(request, uid):
 
 @app.route('/edit/commit', methods=['POST'])
 async def commit_change(request):
+
+    curr_vtt = request['session']['vtt']
+    transcribe = Transcribe()
+    new_srt = transcribe.vtt_mem_to_srt(curr_vtt)
+
     variables = request.form
     id = variables['id'][0]
     author = variables['author'][0]
-    index =  uuid.uuid4().hex
+    index = uuid.uuid4().hex
+
     table = dynamodb.Table('Videos')
     db_query = table.get_item(
         Key={'id':id},
@@ -489,7 +496,10 @@ async def commit_change(request):
     new_item['upload_date'] = int(time.time())
     new_item['job_status'] = 'Edited from <a href="{}">{}</a>'.format(id, id)
     new_item['vote_count'] = 0
+    new_item['subs'] = new_srt
+
     table.put_item(Item=new_item)
+
     return response.redirect('/job/{}'.format(index))
 
 @app.route('/UnderstandLiao', methods=['GET', 'POST'])

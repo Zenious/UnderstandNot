@@ -5,7 +5,7 @@ function goSearch() {
 	}
 }
 
-function getFile(event) {
+function getFile() {
 	$("#file").click();
 }
 
@@ -19,7 +19,7 @@ function convert(value) {
 
 function formatTime() {
 	let time = $('#timeDuration').text();
-	console.log(time);
+	//console.log(time);
 	if (time == "") {
 		$('#timeDuration').html("Not available")
 	} else {
@@ -65,12 +65,13 @@ function seekToTime(row) {
 	$('#edit-end').val(row.children[2].innerText);
 	$('#edit-text').val(row.children[3].innerText);
 
-	let player = videojs('my-video_html5_api');
+	let player = videojs('my-video');
 	player.play();
+	//console.log('seekToTime: '+ parseInt(time));
 	player.currentTime(parseInt(time));
 	player.pause();
 }
-let test;
+
 function applyChange(row) {
 	let link = '';
 	let payload = { 
@@ -81,23 +82,23 @@ function applyChange(row) {
 		index: $(row [name='index']).val()
 	};
 	let original = $(`#sub_${payload.index}`);
-	test = original;
-	originalData = original.children()
-		originalData[1].innerHTML = payload.start;
+	originalData = original.children();
+	originalData[1].innerHTML = payload.start;
 	originalData[2].innerHTML = payload.end;
 	originalData[3].innerHTML = payload.text;
 	$.post("/edit/temp", payload,function( data ) {
-		console.log( data );
+		console.log('applyChange');
+		//console.log( data );
 		link = data.uri;
 
-		let player = videojs('my-video_html5_api');
+		let player = videojs('my-video');
 		let tracks = player.textTracks();
 		tracks.tracks_.forEach(function(track) {
 			if (track.label == 'edit') {
 				tracks.removeTrack(track);
 			}
 		});
-		console.log(link);
+		//console.log(link);
 		let opts = {
 			'src': link,
 			'label': 'edit',
@@ -123,8 +124,11 @@ $(document).ready( function() {
 		$('#file').change(function() {
 			// Reject more than 100MB (cloudflare limit)
 			if ($(this).prop('files')[0].size > 100*1024*1024) {
+
 				alert('Upload file size limit is 100MB');
 				this.value = "";
+			} else {
+				document.getElementById("upload-form").submit();
 			}
 		}) 
 	}

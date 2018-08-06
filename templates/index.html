@@ -36,12 +36,12 @@
 							<input type="submit" hidden>
 						</form>
 					</div>
-					<form action="upload" method=post enctype=multipart/form-data>
+					<form id="upload-form" action="upload" method=post enctype=multipart/form-data>
 						<button class="btn btn-block btn-lg btn-primary" type="button" onclick="getFile();">
 							<i class="icon-cloud-upload" aria-hidden="true" style="margin-right: 0.25em"></i> 
 							Upload
 						</button>
-						<input id="file" type="file" name="file" accept="video/*" style="display: none;" onchange="form.submit();">
+						<input id="file" type="file" name="file" accept="video/*" style="display: none;">
 					</form>
 				</div>
 			</div>
