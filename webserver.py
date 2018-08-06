@@ -337,8 +337,12 @@ async def video(request, id):
         jinja_response.update({'vtt': id})
         jinja_response.update({'id': id})
         jinja_response.update({'video': item['link']})
+        jinja_response.update({'title': item['title']})
+        jinja_response.update({'author': item['author']})
     except:
         abort(404)
+
+    return jinja_response
 
 @app.route('/vote')
 async def vote(request):
