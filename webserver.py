@@ -404,8 +404,6 @@ async def sub_edit(request, id):
     transcribe = Transcribe()
     db_item = db_query['Item']
     subtitle = transcribe.srt_to_edit(db_item['subs'])
-    test = transcribe.parse_to_edit(db_item['transcript'])
-    print(test[210])
     request['session']['vtt'] = transcribe.srt_mem_to_vtt_mem(db_item['subs'])
 
     try:
