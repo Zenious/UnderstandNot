@@ -221,7 +221,7 @@ async def search(request, title):
                     }
                 }
             })
-    records = x['hits']['hits']
+    records = es_search['hits']['hits']
     results = []
     for record in records:
         info = {}
