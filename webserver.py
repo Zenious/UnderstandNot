@@ -1,6 +1,6 @@
 from sanic import Sanic
 from sanic import response
-import uuid 
+import uuid
 import boto3
 import urllib
 from redis import Redis
@@ -72,7 +72,7 @@ async def save_session(request, response):
 @app.route('/')
 @jinja.template('index.html')
 async def index(request):
-    return 
+    return
 
 @app.route('/about')
 @jinja.template('about.html')
@@ -95,8 +95,11 @@ async def privacy(request):
     return
 
 
-@app.route('/upload', methods=['POST'])
+@app.route('/upload', methods=['GET', 'POST'])
 async def post_upload(request):
+    if request.method == 'GET':
+        return abort(404)
+
     if 'file' not in request.files:
         return response.redirect('/')
 
@@ -112,7 +115,7 @@ async def post_upload(request):
         create_file(index, file_body)
         hashcode = compute_md5(file_body)
         log.info('hash generated = {}'.format(hashcode))
-        
+
         b64hash = base64.b64encode(hashcode).decode("ascii")
         es_search = es.search(index='videos', body={
             "query": {
@@ -129,7 +132,7 @@ async def post_upload(request):
                     # found 1 is enough
                     return response.redirect('/hash/{}'.format(b64hash))
             # if cannot find, continue to create new job
-      
+
         table = dynamodb.Table('Videos')
         table.put_item(Item={
             'id': index,
@@ -163,44 +166,52 @@ def compute_md5(data):
     m.update(data)
     return m.digest()
 
-@app.route('/parse', methods=['POST'])
+@app.route('/parse', methods=['GET', 'POST'])
 async def post_transcribe(request):
+    if request.method == 'GET':
+        return abort(404)
     Transcribe.parseOutput()
     return response.text("TODO")
 
 @app.route('/search')
 async def search_redirect(request):
     inputs = request.args
+    if len(inputs) < 1:
+        abort(404)
     return response.redirect('/search/{}'.format(inputs['search'][0]))
 
 @app.route('/hash/<title>')
 @jinja.template('search.html')
 async def hash_search(request, title):
-    es_search = es.search(index='videos', body={
-            "query": {
-                "match": {
-                    "hash": title
+    try:
+        es_search = es.search(index='videos', body={
+                "query": {
+                    "match": {
+                        "hash": title
+                        }
                     }
-                }
-            })
-    records = es_search['hits']['hits']
-    results = []
-    for record in records:
-        info = {}
-        info['id'] = record['_id'][3:] # remove prefix of 'id='
-        record_info = record['_source']
-        if record_info['hash'] != title:
-            pass
-        terms = ['upload_date', 'title', 'author']
-        for term in terms:
-            info[term] = record_info[term]
-        results.append(info)
-    return {'results': results}
+                })
+        records = es_search['hits']['hits']
+        results = []
+        for record in records:
+            info = {}
+            info['id'] = record['_id'][3:] # remove prefix of 'id='
+            record_info = record['_source']
+            if record_info['hash'] != title:
+                pass
+            terms = ['upload_date', 'title', 'author']
+            for term in terms:
+                info[term] = record_info[term]
+            results.append(info)
+        return {'results': results}
+    except:
+        abort(404)
 
 @app.route('/search/<title>')
 @jinja.template('search.html')
 async def search(request, title):
     # get GET Parameters
+
     jinja_response = {}
     jinja_response.update({'search_query': title});
     es_search = es.search(index='videos', body={
@@ -307,7 +318,7 @@ async def retrieve_job(request, id):
             status= 'Sent to AWS to Transcribe'
             jinja_response.update({'status': status})
             return jinja_response
-        else: 
+        else:
             return jinja_response
     elif job_status == 'Transcription done' or "Edited" in job_status :
         jinja_response.update({
@@ -319,7 +330,7 @@ async def retrieve_job(request, id):
         return jinja_response
     else:
         return jinja_response
-       
+
 
 @app.route('/video/<id>')
 @jinja.template('video.html')
@@ -346,41 +357,44 @@ async def video(request, id):
 
 @app.route('/vote')
 async def vote(request):
-    args = request.args
-    query_id = args.get('id')
-    query_vote = args.get('vote')
-    table = dynamodb.Table('Videos')
-    db_query = table.get_item(
-        Key={'id':query_id},
-        ConsistentRead=True
-    )
-    item = db_query['Item']
-    count_vote = item.get('vote_count')
-    if count_vote is None:
-        count_vote = 0
-    voting_status = request['session'].get('vote')
-    if voting_status:
-        voted = request['session']['vote']
-        log.info(type(voted))
-        if query_id in voted:
-            return response.json({'status': 'error', 'count': count_vote})
-    else:
-        voted = []
-    if query_vote == 'yes':
-        count_vote += 1
-    else:
-        count_vote -= 1
-    voted.append(query_id)   
-    table.update_item(
-        Key= {'id': query_id},
-        UpdateExpression = "SET vote_count=:count_vote",
-        ExpressionAttributeValues={
+    try:
+        args = request.args
+        query_id = args.get('id')
+        query_vote = args.get('vote')
+        table = dynamodb.Table('Videos')
+        db_query = table.get_item(
+            Key={'id':query_id},
+            ConsistentRead=True
+        )
+        item = db_query['Item']
+        count_vote = item.get('vote_count')
+        if count_vote is None:
+            count_vote = 0
+        voting_status = request['session'].get('vote')
+        if voting_status:
+            voted = request['session']['vote']
+            log.info(type(voted))
+            if query_id in voted:
+                return response.json({'status': 'error', 'count': count_vote})
+        else:
+            voted = []
+        if query_vote == 'yes':
+            count_vote += 1
+        else:
+            count_vote -= 1
+        voted.append(query_id)
+        table.update_item(
+            Key= {'id': query_id},
+            UpdateExpression = "SET vote_count=:count_vote",
+            ExpressionAttributeValues={
             ':count_vote': count_vote
             }
-    )
+        )
 
-    request['session']['vote'] = voted
-    return response.json({'status': 'ok', 'count': count_vote})
+        request['session']['vote'] = voted
+        return response.json({'status': 'ok', 'count': count_vote})
+    except:
+        abort(404)
 
 @app.route('/milestone2')
 async def milestone(request):
@@ -395,20 +409,17 @@ async def get_queue_length(request):
 @app.route('/edit/<id>')
 @jinja.template('edit.html')
 async def sub_edit(request, id):
-    jinja_response = {}
-    table = dynamodb.Table('Videos')
-    db_query = table.get_item(
-        Key={'id':id},
-        ConsistentRead=True
-        )
-    transcribe = Transcribe()
-    db_item = db_query['Item']
-    subtitle = transcribe.srt_to_edit(db_item['subs'])
-    test = transcribe.parse_to_edit(db_item['transcript'])
-    print(test[210])
-    request['session']['vtt'] = transcribe.srt_mem_to_vtt_mem(db_item['subs'])
-
     try:
+        jinja_response = {}
+        table = dynamodb.Table('Videos')
+        db_query = table.get_item(
+            Key={'id':id},
+            ConsistentRead=True
+            )
+        transcribe = Transcribe()
+        db_item = db_query['Item']
+        subtitle = transcribe.srt_to_edit(db_item['subs'])
+        request['session']['vtt'] = transcribe.srt_mem_to_vtt_mem(db_item['subs'])
         jinja_response.update({'subtitles': subtitle})
         jinja_response.update({'vtt': '{}'.format(id)})
         jinja_response.update({'id': id})
@@ -418,8 +429,11 @@ async def sub_edit(request, id):
     except:
         abort(404)
 
-@app.route('/edit/temp', methods=['POST'])
+@app.route('/edit/temp', methods=['GET', 'POST'])
 async def interrim_vtt(request):
+    if request.method == 'GET':
+        return abort(404)
+
     variables = request.form
     srt = variables['id'][0]
     start = variables['start'][0]
@@ -474,8 +488,10 @@ async def srt(request, uid):
         abort(404)
     return response.text(item['subs'])
 
-@app.route('/edit/commit', methods=['POST'])
+@app.route('/edit/commit', methods=['GET','POST'])
 async def commit_change(request):
+    if request.method == 'GET':
+        abort(404)
 
     curr_vtt = request['session']['vtt']
     transcribe = Transcribe()
@@ -557,8 +573,11 @@ async def admin_panel(request):
     else:
         abort(403)
 
-@app.route('/delete', methods=['POST'])
+@app.route('/delete', methods=['GET', 'POST'])
 async def delete_job(request):
+    if request.method == 'GET':
+        abort(404)
+
     if request['session'].get('admin') is not True:
         return response.redirect('/UnderstandLiao')
     else:
